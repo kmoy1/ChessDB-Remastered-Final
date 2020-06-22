@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8506fdb9-2719-425c-89b1-8d6fd0bba48b" name="Default Changelist" comment="" />
+    <list default="true" id="8506fdb9-2719-425c-89b1-8d6fd0bba48b" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqgjyha2bpgnydilzuoazs4m0qkazs4obpkbifamsqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgmxtgucqgmxtql0qkbideucqkaxvetsckffuetssebrcas0rnnysazbt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgmxtiubtf22c4ucqkbidcucqkaxvetsckffuetsseb1sas0rnnysazjw.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/aojxge2llmjxhel1qobyha2dqobyc4obphaxtgubuf22c4ucqkayvaucqkaxvetsckffuetssebrcas0rnnysazbt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/bzg2ytrnnrg22rpobyha2dqobyhalzyf22c4obpgridgl0qkbifamkqkbic4usoijiuwqsokiqgeiclkfvxcibn.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/dsnzrhc01cnzzc42dqoazha2dqf2zxanbpgridglzukazs4obpkbifamsqkbic4usoijiuwqsokiqgeiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyha2dqf22c4obphaxtql0qkbifaucqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyha2dqf22c4obphaxtql0qkbifaucqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/aojxge2llmjxhel1qobyha2dqobyc4obphaxtiubtf22c4ucqkbidcucqkaxvetsckffuetssebrcas0rnnysazjt.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/aojxge2llmjxhel1qobyha2dqobyc4obphaxtiubtf22c4ucqkbidcucqkaxvetsckffuetssebrcas0rnnysazjt.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$2.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$3.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$4.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$5.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Board.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Board.java" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,9 +34,17 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1dc3b2vRvoFlSGPctEre7Yf0fl2" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/dist" />
     <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.15527344" />
@@ -73,5 +99,19 @@
       <updated>1592710621773</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>

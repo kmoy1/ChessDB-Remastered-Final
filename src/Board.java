@@ -1,28 +1,20 @@
-import java.io.*;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import javafx.event.ActionEvent;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
-
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.TextField;
-
 import java.io.IOException;
-
 import javafx.scene.control.TextArea;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javafx.application.Platform;
 import javax.swing.JOptionPane;
 import java.util.Arrays;
 import javafx.collections.FXCollections;
@@ -241,19 +233,13 @@ class Board {
 
             Button reset_button=new Button();
             reset_button.setText("Reset");
-            reset_button.setOnAction(new EventHandler<ActionEvent>() {
-                @Override public void handle(ActionEvent e) {
-                    reset();
-                }
-            });
+            reset_button.setOnAction(e -> reset());
 
             Button delete_button=new Button();
             delete_button.setText("Delete");
-            delete_button.setOnAction(new EventHandler<ActionEvent>() {
-                @Override public void handle(ActionEvent e) {
-                    set_from_fen_inner(g.delete_move(),false);
-                    make_move_show(null);
-                }
+            delete_button.setOnAction(e -> {
+                set_from_fen_inner(g.delete_move(),false);
+                make_move_show(null);
             });
 
             controls_box.getChildren().add(flip_button);
@@ -358,7 +344,7 @@ class Board {
     }
 
     private boolean next_pseudo_legal_move() {
-        while(curr_j<8) {
+        while(curr_j < 8) {
             while(!move_table[move_gen_curr_ptr].end_piece) {
                 MoveDescriptor md = move_table[move_gen_curr_ptr];
                 int to_i = md.to_i;
@@ -402,14 +388,12 @@ class Board {
                                         (!checkHelper(4,0,BLACK))
                                         &&
                                         (!checkHelper(3,0,BLACK))
-                        )
-                        {
+                        ) {
                             return true;
                         }
                     }
 
-                    if((curr_j==7)&&(to_i==6))
-                    {
+                    if((curr_j==7)&&(to_i==6)) {
                         // white kingside
                         if(
                                 (board[6][7]==' ')
@@ -752,92 +736,93 @@ class Board {
     }
 
 
-    private Boolean is_dark_square(int i,int j) {
+    /**Helper function to populate fonts array (for pieces and squares)
+     * based on current position.*/
+    private char[][] populateFonts(char[][] board) {
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                if (darkSquare(i,j)) {
+                    fonts[i][j] = (char) translit_dark.get(board[i][j]);
+                }
+                else {
+                    fonts[i][j] = (char) translit_light.get(board[i][j]);
+                }
+            }
+        }
+        return fonts;
+    }
+
+    /** Return if square at (i,j) is a dark square or not
+     * (must be a light square if false) **/
+    private boolean darkSquare(int i, int j) {
         return (i+j) % 2 == 1;
     }
 
-    private char[][] board_to_fonts(char[][] board) {
-        for(int i=0;i<8;i++)
-        {
-            for(int j=0;j<8;j++)
-            {
-                fonts[i][j]=
-                        is_dark_square(i,j)?
-                                (char)translit_dark.get(board[i][j])
-                                :
-                                (char)translit_light.get(board[i][j]);
+    /** Convert a string representation of a position REP
+     * and set the position via board array.
+     * @param rep string representation of position
+     */
+    private char[][] setPosition(String rep) {
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                //Convert 2D coordinates (8x8) to 1D (64).
+                board[i][j] = rep.charAt(i + j*8);
             }
         }
-
-        return fonts;
-
-    }
-
-    private char[][] rep_to_board(String rep)
-    {
-
-        for(int i=0;i<8;i++)
-        {
-            for(int j=0;j<8;j++)
-            {
-                board[i][j]=rep.charAt(i+j*8);
-            }
-        }
-
         return board;
-
     }
 
-    // convert board coordinates to screen coordinates
-    private int gc_x(int i)
-    {
-        return(margin+(flip?(7-i):i)*(piece_size+padding));
+    /** Converts board x-coordinate to corresponding pixel location*/
+    private int bp_x(int i) {
+        int offset = i;
+        if (flip) {
+            offset = 7 - i;
+        }
+        return margin + offset * (piece_size + padding);
     }
 
-    private int gc_y(int j)
-    {
-        return(margin+((flip?(7-j):j)*(piece_size+padding)));
+    /** Converts board y-coordinate to corresponding pixel location*/
+    private int bp_y(int j) {
+        int offset = j;
+        if (flip) {
+            offset = 7 - j;
+        }
+        return margin + offset * (piece_size + padding);
     }
 
-    // convert screen coordinates to board coordinates
-    private int gc_i(int x)
-    {
-        int i=(int)((x-margin)/(piece_size+padding));
-        return(flip?(7-i):i);
+    /** Converts pixel (screen) x-coordinate to corresponding board location. */
+    private int pb_x(int x) {
+        int i = (x - margin) / (piece_size + padding);
+        return flip? (7-i) : i;
     }
 
-    private int gc_j(int y)
-    {
-        int j=(int)((y-margin)/(piece_size+padding));
+    /** Converts pixel (screen) x-coordinate to corresponding board location. */
+    private int pb_y(int y) {
+        int j = (y - margin) / (piece_size + padding);
         return(flip?(7-j):j);
     }
 
-    private void put_piece_xy(GraphicsContext select_gc,int x,int y,char piece)
-    {
-        if(select_gc==gc)
-        {
+    /** Place piece onto (x,y) pixel location on graphicsContext SELECT_GC.
+     * This method ensures pieces actually show up as an image from the TTF file,
+     * rather than a character. Additionally, handles maintaining
+     * coloration of squares AFTER move.*/
+    private void put_piece_xy(GraphicsContext select_gc, int x, int y, char piece) {
+        if(select_gc == gc) {
+            //Ensures square where piece moved from remains colored.
             select_gc.setFill(board_color);
-            select_gc.fillRect(x, y, piece_size+padding, piece_size+padding );
+            //Ensure piece is removed from original square upon movement.
+            select_gc.fillRect(x, y, piece_size + padding, piece_size + padding);
         }
         select_gc.setFill(piece_color);
         select_gc.setFont(pieceFont);
-        select_gc.fillText(
-                Character.toString(piece),
-                x,y+piece_size+padding
-        );
+        select_gc.fillText(Character.toString(piece), x,y + piece_size + padding);
     }
 
     public void drawBoard() {
+        if(deep_going) return;
 
-        if(deep_going)
-        {
-            return;
-        }
-
-        board_to_fonts(board);
-
+        populateFonts(board);
         gc.setFont(pieceFont);
-
         gc.setFill(board_color);
         gc.fillRect(0, 0, board_size, board_size);
 
@@ -846,13 +831,9 @@ class Board {
 
         gc.setFill(piece_color);
 
-        for(int i=0;i<8;i++)
-        {
-            for(int j=0;j<8;j++)
-            {
-
-                gc.fillText(Character.toString(fonts[i][j]), gc_x(i),gc_y(j)+piece_size+padding);
-
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                gc.fillText(Character.toString(fonts[i][j]), bp_x(i), bp_y(j) + piece_size + padding);
             }
         }
 
@@ -940,7 +921,7 @@ class Board {
             return false;
         }
 
-        rep_to_board(rep);
+        setPosition(rep);
 
         if(fen_parts.length>=2)
         {
@@ -1062,26 +1043,24 @@ class Board {
         return(fen);
     }
 
-    public void flip()
-    {
-        flip=!flip;
+    public void flip() {
+        flip = !flip;
         drawBoard();
         g.update_game();
     }
 
-    private void make_move(Move m)
-    {
-
+    /** Make a move M on the board **/
+    private void make_move(Move m) {
         // make move
-        m.orig_piece=board[m.i1][m.j1];
-        board[m.i1][m.j1]=' ';
-
-        char dest_piece=board[m.i2][m.j2];
-
-        board[m.i2][m.j2]=m.orig_piece;
-
-        // turn
-        turnToMove =-turnToMove;
+        //
+        m.orig_piece = board[m.i1][m.j1];
+        // Remove piece from its original square on the board.
+        board[m.i1][m.j1] = ' ';
+        //Save piece on dest_square prior and place original piece on dest_square. 
+        char dest_piece = board[m.i2][m.j2];
+        board[m.i2][m.j2] = m.orig_piece;
+        //turn
+        turnToMove = -turnToMove;
 
         // clear ep
         ep_square_algeb="-";
@@ -1226,25 +1205,21 @@ class Board {
             }
         }
 
-        if(m.orig_piece=='K')
-        {
-            if((m.j1==7)&&(m.i1==4)&&(m.j2==7)&&(m.i2==6))
-            {
-                board[7][7]=' ';
-                board[5][7]='R';
+        if(m.orig_piece == 'K') {
+            if((m.j1 == 7) && (m.i1 == 4) && (m.j2 == 7) && (m.i2 == 6)) {
+                board[7][7] = ' ';
+                board[5][7] = 'R';
             }
 
-            if((m.j1==7)&&(m.i1==4)&&(m.j2==7)&&(m.i2==2))
-            {
+            if((m.j1 == 7) && (m.i1 == 4) && (m.j2 == 7) && (m.i2 == 2)) {
                 board[0][7]=' ';
                 board[3][7]='R';
             }
         }
 
-        // ep capture
-        if(((m.orig_piece=='p')||(m.orig_piece=='P'))&&(dest_piece==' ')&&(m.i1!=m.i2))
-        {
-            board[m.i2][m.j1]=' ';
+        //en passant
+        if(((m.orig_piece == 'p') || (m.orig_piece == 'P')) && (dest_piece == ' ') && (m.i1 != m.i2)) {
+            board[m.i2][m.j1] = ' ';
         }
 
     }
@@ -1701,8 +1676,8 @@ class Board {
                     upper_gc.clearRect(0,0,board_size,board_size);
                     is_drag_going=false;
 
-                    drag_to_i=gc_i(x);
-                    drag_to_j=gc_i(y);
+                    drag_to_i= pb_x(x);
+                    drag_to_j= pb_x(y);
 
                     // same square
                     if((drag_to_i==drag_from_i)&&(drag_to_j==drag_from_j))
@@ -1724,8 +1699,8 @@ class Board {
                     )
                     {
 
-                        drag_to_x=gc_x(drag_to_i);
-                        drag_to_y=gc_y(drag_to_j);
+                        drag_to_x= bp_x(drag_to_i);
+                        drag_to_y= bp_y(drag_to_j);
 
                         makemove.i1=drag_from_i;
                         makemove.j1=drag_from_j;
@@ -1769,17 +1744,17 @@ class Board {
                 else
                 {
                     is_drag_going=true;
-                    drag_from_i=gc_i(x);
-                    drag_from_j=gc_j(y);
-                    drag_from_x=gc_x(drag_from_i);
-                    drag_from_y=gc_y(drag_from_j);
+                    drag_from_i= pb_x(x);
+                    drag_from_j= pb_y(y);
+                    drag_from_x= bp_x(drag_from_i);
+                    drag_from_y= bp_y(drag_from_j);
                     drag_dx=drag_from_x-x;
                     drag_dy=drag_from_y-y;
                     orig_drag_piece=fonts[drag_from_i][drag_from_j];
                     orig_piece=board[drag_from_i][drag_from_j];
                     drag_piece=(char)translit_light.get(orig_piece);
 
-                    orig_empty=is_dark_square(drag_from_i,drag_from_j)?'+':' ';
+                    orig_empty= darkSquare(drag_from_i,drag_from_j)?'+':' ';
 
                     put_piece_xy(gc,drag_from_x,drag_from_y,orig_empty);
 
@@ -1793,7 +1768,7 @@ class Board {
     public void reset() {
         //Set relevant FEN information.
         rep="rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR";
-        rep_to_board(rep);
+        setPosition(rep);
         castling_rights = "KQkq";
         ep_square_algeb = "-";
         halfmove_clock = 0;
@@ -2147,8 +2122,8 @@ class Board {
 
         int arc=piece_size/2;
         int size=piece_size-4;
-        highlight_gc.fillRoundRect(gc_x(m.i1)+2,gc_y(m.j1)+5,size,size,arc,arc);
-        highlight_gc.fillRoundRect(gc_x(m.i2)+2,gc_y(m.j2)+5,size,size,arc,arc);
+        highlight_gc.fillRoundRect(bp_x(m.i1)+2, bp_y(m.j1)+5,size,size,arc,arc);
+        highlight_gc.fillRoundRect(bp_x(m.i2)+2, bp_y(m.j2)+5,size,size,arc,arc);
 
     }
 

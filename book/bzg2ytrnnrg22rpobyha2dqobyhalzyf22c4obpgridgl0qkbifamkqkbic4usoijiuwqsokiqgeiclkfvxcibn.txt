@@ -4,6 +4,6 @@ e5
 	is_analyzed
 	false
 	count
-	7
+	1
 	notation
 	-1
