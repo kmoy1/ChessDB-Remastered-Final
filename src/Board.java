@@ -38,11 +38,11 @@ class Board {
     int fullmove_number;
     int turnToMove;
 
-    private String[] engine_list = new String[MyFile.MAX_LINES];
+    private String[] engine_list = new String[BasicFile.MAX_LINES];
     private FileChooser f = new FileChooser();
-    private Boolean with_gui;
+    private boolean with_gui;
     private String uci_engine_path = "";
-    private Boolean engine_intro = true;
+    private boolean engine_intro = true;
 
     private Button engine_go_button;
     private Button engine_stop_button;
@@ -77,7 +77,7 @@ class Board {
     private char[][] board = new char[8][8];
     private char[][] fonts = new char[8][8];
 
-    public Boolean flip;
+    public boolean flip;
     ////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////
@@ -151,7 +151,7 @@ class Board {
     private int score_mate;
     private String score_verbal;
     public int score_numerical;
-    private Boolean engine_running;
+    private boolean engine_running;
     ////////////////////////////////////////////////////////
 
 
@@ -198,14 +198,14 @@ class Board {
     private char current_move_gen_piece = ' ';
     private int current_move_gen_piece_code = 0;
     private int current_move_gen_piece_type = 0;
-    private Boolean is_current_move_gen_piece_sliding = false;
+    private boolean is_current_move_gen_piece_sliding = false;
     private int current_move_gen_piece_color = 0;
     private Move current_move = new Move();
     ////////////////////////////////////////////////////////
 
     /** Constructor for standard Board instance: sets HBox + VBox chain with
      * Board + Pieces, commentary, movelist, etc. Run with GUI class. **/
-    public Board(Boolean set_with_gui) {
+    public Board(boolean set_with_gui) {
         with_gui = set_with_gui;
         if (with_gui) {
             flip = false;
@@ -303,7 +303,7 @@ class Board {
         reset();
     }
 
-    public Boolean is_engine_installed() {
+    public boolean is_engine_installed() {
         if(uci_engine_path == null) return false;
         if(uci_engine_path.equals("")) return false;
         return true;
@@ -449,7 +449,7 @@ class Board {
                 else
                 {
 
-                    Boolean is_capture=to_piece!=' ';
+                    boolean is_capture=to_piece!=' ';
 
                     if(is_capture)
                     {
@@ -544,7 +544,7 @@ class Board {
         return 0;
     }
 
-    private static Boolean square_ok(int i,int j)
+    private static boolean square_ok(int i,int j)
     {
         if((i>=0)&&(i<=7)&&(j>=0)&&(j<=7))
         {
@@ -580,7 +580,7 @@ class Board {
                         //Left column is 0, right column is 7.
                         for(int dx = -2; dx <= 2; dx++) {
                             for(int dy = -2; dy <= 2; dy++) {
-                                Boolean is_castling = isCastlingHelper(p,x,y,dx,dy);
+                                boolean is_castling = isCastlingHelper(p,x,y,dx,dy);
                                 if (moves(dx,dy) && ((is_castling) || diagPieceMoved(piece_type, dx, dy)
                                         || straightPieceMoved(piece_type, dx, dy)
                                         || knightMoved(piece_type, dx, dy)
@@ -667,7 +667,7 @@ class Board {
 
     /** Return true if cartesian coordinate (x,y) is a valid coordinate
      * in a zero-indexed 8x8 graph, i.e. our board **/
-    private static Boolean inbounds(int x, int y) {
+    private static boolean inbounds(int x, int y) {
         if((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
             return true;
         }
@@ -675,12 +675,12 @@ class Board {
     }
 
     /** Helper method that returns true if a piece actually has moved, i.e. its overall displacement (dx+dy) is positive**/
-    private static Boolean moves(int dx, int dy) {
+    private static boolean moves(int dx, int dy) {
         return Math.abs(dx) + Math.abs(dy) > 0;
     }
 
     /** Helper method that returns true if a diagonal piece (bishop, king, queen) has positive displacement. **/
-    private static Boolean diagPieceMoved(int piece_type, int dx, int dy) {
+    private static boolean diagPieceMoved(int piece_type, int dx, int dy) {
         return ((dx * dy) != 0) &&
                 ((Math.abs(dx) != 2) && (Math.abs(dy) != 2))
                 &&
@@ -688,19 +688,19 @@ class Board {
     }
 
     /** Helper method that returns true if a STRAIGHT-moving piece (queen, rook, king) has positive displacement. **/
-    private static Boolean straightPieceMoved(int piece_type, int dx, int dy) {
+    private static boolean straightPieceMoved(int piece_type, int dx, int dy) {
         return ((dx*dy)==0)
                 && ((Math.abs(dx) != 2) && (Math.abs(dy) != 2))
                 && ((piece_type & STRAIGHT) != 0);
     }
 
     /** Helper method that returns true if a KNIGHT has moved **/
-    private static Boolean knightMoved(int piece_type, int dx, int dy) {
+    private static boolean knightMoved(int piece_type, int dx, int dy) {
         return ((Math.abs(dx * dy) == 2) && (piece_type == KNIGHT));
     }
 
     /** Helper method that returns true if a pawn has made a capture.**/
-    private static Boolean pawnCaptures(int piece_type, int piece_color, int i, int j, int dx, int dy) {
+    private static boolean pawnCaptures(int piece_type, int piece_color, int i, int j, int dx, int dy) {
         return ((piece_type == PAWN) && (Math.abs(dx) < 2) && (Math.abs(dy) > 0) &&
                 (((piece_color==WHITE) && (dy < 0) && ((Math.abs(dy) == 1)
                         || ((j==6) && (dx==0))))  //enpassant for black
@@ -805,7 +805,7 @@ class Board {
     /** Place piece onto (x,y) pixel location on graphicsContext SELECT_GC.
      * This method ensures pieces actually show up as an image from the TTF file,
      * rather than a character. Additionally, handles maintaining
-     * coloration of squares AFTER move.*/
+     * coloration of squares AFTER move (original square and dest square).*/
     private void put_piece_xy(GraphicsContext select_gc, int x, int y, char piece) {
         if(select_gc == gc) {
             //Ensures square where piece moved from remains colored.
@@ -838,200 +838,138 @@ class Board {
         }
 
         gc.setFont(Font.font("Courier New",font_size));
-
-        gc.fillText(
-                " t: "+(turnToMove ==1?"w":"b")+
-                        ", c: "+castling_rights+
-                        ", ep: "+ep_square_algeb+
-                        ", hm: "+halfmove_clock+
-                        ", fm: "+fullmove_number+
-                        ", flp: "+(flip?"y":"n")+
-                        (is_in_check(turnToMove)?", +":"")
-                ,
-                0,board_size+padding+font_size);
-
+        String gc_text = " t: "+(turnToMove ==1?"w":"b")+
+                ", c: "+castling_rights+
+                ", ep: "+ep_square_algeb+
+                ", hm: "+halfmove_clock+
+                ", fm: "+fullmove_number+
+                ", flp: "+(flip? "y":"n")+
+                (is_in_check(turnToMove)?", +":"");
+        gc.fillText(gc_text, 0,board_size + padding + font_size);
         gc.strokeRect(0, 0, board_size, board_size);
-
         fen_text.setText(getFEN());
-
-//        update_engine();
         list_legal_moves();
-
     }
 
-    private String board_to_rep()
-    {
-        rep="";
-        for(int i=0;i<8;i++)
-        {
-            for(int j=0;j<8;j++)
-            {
+    /** Convert current board position to string representation. **/
+    private String board_to_rep() {
+        rep = "";
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
                 rep+=board[j][i];
             }
         }
         return rep;
     }
 
-    public Boolean set_from_fen(String fen)
-    {
+    public boolean set_from_fen(String fen) {
         return set_from_fen_inner(fen,true);
     }
 
-    public Boolean set_from_fen_inner(String fen,Boolean do_reset_game)
-    {
-
-        rep="";
-
-        String[] fen_parts=fen.split(" ");
-
-        fen=fen_parts[0];
-        for(int i=0;i<fen.length();i++)
-        {
-            char current=fen.charAt(i);
-            if(rep.length()<64)
-            {
-                if(current=='/')
-                {
-
+    public boolean set_from_fen_inner(String fen,boolean do_reset_game) {
+        rep = "";
+        String[] fen_parts = fen.split(" ");
+        fen = fen_parts[0];
+        for(int i = 0; i < fen.length(); i++) {
+            char current = fen.charAt(i);
+            if(rep.length() < 64) {
+                if(current=='/') {
+                    //Do nothing
                 }
-                else
-                {
-                    if((current>='1')&&(current<='8'))
-                    {
-                        for(int j=0;j<Integer.parseInt(""+current);j++)
-                        {
-                            rep+=" ";
+                else {
+                    if((current >= '1') && (current <= '8')) {
+                        for(int j = 0; j < Integer.parseInt("" + current); j++) {
+                            rep += " ";
                         }
                     }
-                    else
-                    {
-                        rep+=current;
+                    else {
+                        rep += current;
                     }
                 }
             }
-            else
-            {
+            else {
                 break;
             }
         }
 
-        if(rep.length()<64)
-        {
+        if(rep.length() < 64) {
             board_to_rep();
             return false;
         }
 
         setPosition(rep);
-
-        if(fen_parts.length>=2)
-        {
-
-            String turn_part=fen_parts[1];
-
-            if(turn_part.charAt(0)=='w')
-            {
+        if(fen_parts.length >= 2) {
+            String turn_part = fen_parts[1];
+            if(turn_part.charAt(0) == 'w') {
                 turnToMove = WTURN;
             }
-            else
-            {
+            else {
                 turnToMove = BTURN;
             }
-
         }
 
-        if(fen_parts.length>=3)
-        {
-            String castling_rights_part=fen_parts[2];
-
-            castling_rights=castling_rights_part;
+        if(fen_parts.length >= 3) {
+            String castling_rights_part = fen_parts[2];
+            castling_rights = castling_rights_part;
         }
 
-
-        if(fen_parts.length>=4)
-        {
-            String ep_square_algeb_part=fen_parts[3];
-
-            ep_square_algeb=ep_square_algeb_part;
+        if(fen_parts.length >= 4) {
+            String ep_square_algeb_part = fen_parts[3];
+            ep_square_algeb = ep_square_algeb_part;
         }
 
-        if(fen_parts.length>=5)
-        {
-            String halfmove_clock_part=fen_parts[4];
-
-            halfmove_clock=Integer.parseInt(halfmove_clock_part);
+        if(fen_parts.length >= 5) {
+            String halfmove_clock_part = fen_parts[4];
+            halfmove_clock = Integer.parseInt(halfmove_clock_part);
         }
 
-        if(fen_parts.length>=6)
-        {
-            String fullmove_number_part=fen_parts[5];
-
-            fullmove_number=Integer.parseInt(fullmove_number_part);
+        if(fen_parts.length >= 6) {
+            String fullmove_number_part = fen_parts[5];
+            fullmove_number = Integer.parseInt(fullmove_number_part);
         }
 
-        if((with_gui)&&(!deep_going))
-        {
-
+        if((with_gui) && (!deep_going)) {
             drawBoard();
-
-            if(do_reset_game)
-            {
+            if(do_reset_game) {
                 reset_game();
             }
-
         }
-
         return true;
     }
 
-    public static String fen_to_raw(String fen)
-    {
-        String raw_fen=fen.replaceAll(" [^ ]+ [^ ]+$", "");
-
+    public static String fen_to_raw(String fen) {
+        String raw_fen = fen.replaceAll(" [^ ]+ [^ ]+$", "");
         return raw_fen;
     }
 
-    public String getFEN()
-    {
-
-        String fen="";
-
+    public String getFEN() {
+        String fen = "";
         board_to_rep();
-
-        for(int j=0;j<8;j++)
-        {
-            int empty_cnt=0;
-            for(int i=0;i<8;i++)
-            {
-                int index=i+j*8;
-                char current=rep.charAt(index);
-                if(current==' ')
-                {
+        for(int j = 0; j < 8; j++) {
+            int empty_cnt = 0;
+            for(int i = 0; i < 8; i++) {
+                int index = i + j * 8;
+                char current = rep.charAt(index);
+                if(current == ' ') {
                     empty_cnt++;
                 }
-                else
-                {
-                    if(empty_cnt>0)
-                    {
-                        fen+=empty_cnt;
-                        empty_cnt=0;
+                else {
+                    if(empty_cnt > 0) {
+                        fen += empty_cnt;
+                        empty_cnt = 0;
                     }
-                    fen+=current;
+                    fen += current;
                 }
             }
-            if(empty_cnt>0)
-            {
-                fen+=empty_cnt;
+            if(empty_cnt > 0) {
+                fen += empty_cnt;
             }
-            if(j<7)
-            {
-                fen+="/";
+            if(j < 7) {
+                fen += "/";
             }
         }
-
-        fen+=
-                " "
-                        +(turnToMove == WTURN ?"w":"b")
-                        +" "
+        fen+= " " +(turnToMove == WTURN ?"w":"b")
+                        + " "
                         +castling_rights
                         +" "
                         +ep_square_algeb
@@ -1039,7 +977,6 @@ class Board {
                         +halfmove_clock
                         +" "
                         +fullmove_number;
-
         return(fen);
     }
 
@@ -1051,25 +988,20 @@ class Board {
 
     /** Make a move M on the board **/
     private void make_move(Move m) {
-        // make move
-        //
         m.orig_piece = board[m.i1][m.j1];
         // Remove piece from its original square on the board.
         board[m.i1][m.j1] = ' ';
-        //Save piece on dest_square prior and place original piece on dest_square. 
+        //Save piece on dest_square prior and place original piece on dest_square.
         char dest_piece = board[m.i2][m.j2];
         board[m.i2][m.j2] = m.orig_piece;
-        //turn
+        //Switch turns.
         turnToMove = -turnToMove;
-
         // clear ep
-        ep_square_algeb="-";
-
+        ep_square_algeb = "-";
         // promotion
         if( ((m.orig_piece=='P')&&(m.j2==0)) || ((m.orig_piece=='p')&&(m.j2==7)) )
         {
-            if(m.prom_piece!=' ')
-            {
+            if(m.prom_piece != ' ') {
                 if((m.prom_piece>='a')&&(m.prom_piece<='z'))
                 {
                     if(m.orig_piece=='P')
@@ -1119,9 +1051,9 @@ class Board {
         }
 
         // halfmove clock
-        Boolean is_capture=(dest_piece!=' ');
+        boolean is_capture=(dest_piece!=' ');
 
-        Boolean is_pawn_move=((m.orig_piece=='p')||(m.orig_piece=='P'));
+        boolean is_pawn_move=((m.orig_piece=='p')||(m.orig_piece=='P'));
 
         if(is_capture||is_pawn_move)
         {
@@ -1224,8 +1156,8 @@ class Board {
 
     }
 
-    private char piece_of_code(int code)
-    {
+    /** Decode piece from integer form to corresponding character. **/
+    private char decodePiece(int code) {
         if(code==(WHITE|KING)){return 'K';}
         if(code==(BLACK|KING)){return 'k';}
         if(code==(WHITE|QUEEN)){return 'Q';}
@@ -1248,7 +1180,7 @@ class Board {
             int piece_code = all_pieces[p];
             int piece_type = piece_code & PIECE_TYPE;
             int check_ptr=move_table_ptr[i][j][piece_code|color];
-            char test_piece = piece_of_code(piece_code|attacker_color);
+            char test_piece = decodePiece(piece_code|attacker_color);
             MoveDescriptor md;
             do {
                 md = move_table[check_ptr];
@@ -1320,93 +1252,50 @@ class Board {
         return coords;
     }
 
-    public String[] legal_move_list_buffer=new String[250];
-
-    public int legal_move_list_buffer_cnt=0;
-
-    public void list_legal_moves()
-    {
+    public String[] legal_move_list_buffer = new String[250];
+    public int legal_move_list_buffer_cnt = 0;
+    public void list_legal_moves() {
         init_move_generator();
-
         String legal_move_list_as_string;
-        legal_move_list_buffer_cnt=0;
-
-        while(next_pseudo_legal_move())
-        {
-            String algeb=current_move.to_algeb();
-
+        legal_move_list_buffer_cnt = 0;
+        while(next_pseudo_legal_move()) {
+            String algeb = current_move.to_algeb();
             Board dummy=new Board(false);
-
             dummy.set_from_fen(getFEN());
-
             dummy.make_move(current_move);
-
-            if(!dummy.is_in_check(turnToMove))
-            {
-
-                String san=to_san(current_move);
-
-                legal_move_list_buffer[legal_move_list_buffer_cnt++]=san;
-
+            if(!dummy.is_in_check(turnToMove)) {
+                String san = to_san(current_move);
+                legal_move_list_buffer[legal_move_list_buffer_cnt++] = san;
             }
-
         }
-
-        String[] legal_move_list_buffer_slice=Arrays.copyOfRange(legal_move_list_buffer,0,legal_move_list_buffer_cnt);
-
+        String[] legal_move_list_buffer_slice = Arrays.copyOfRange(legal_move_list_buffer, 0, legal_move_list_buffer_cnt);
         Arrays.sort(legal_move_list_buffer_slice);
-
-        ObservableList<String> items =FXCollections.observableArrayList (
-                legal_move_list_buffer_slice);
-
+        ObservableList<String> items = FXCollections.observableArrayList(legal_move_list_buffer_slice);
         list.setItems(items);
-
-        list.setOnMouseClicked(new EventHandler<Event>() {
-
-            @Override
-            public void handle(Event event) {
-                ObservableList<String> selectedItems =  list.getSelectionModel().getSelectedItems();
-
-                for(String s : selectedItems){
-                    make_san_move(s,true);
-                }
-
+        list.setOnMouseClicked((EventHandler<Event>) event -> {
+            ObservableList<String> selectedItems =  list.getSelectionModel().getSelectedItems();
+            for(String s : selectedItems){
+                make_san_move(s,true);
             }
-
         });
-
     }
 
-    private Boolean is_move_legal(Move m)
-    {
-
-        Boolean is_legal=false;
-
-        String algeb=m.to_algeb_inner(false);
-
+    /** Check if Move is legal given current board position**/
+    private boolean is_move_legal(Move m) {
+        boolean is_legal = false;
+        String algeb = m.to_algeb_inner(false);
         init_move_generator();
-
-        while((!is_legal)&&(next_pseudo_legal_move()))
-        {
-
-            String test_algeb=current_move.to_algeb_inner(false);
-
-            if(test_algeb.equals(algeb))
-            {
-                Board dummy=new Board(false);
-
+        while((!is_legal)&&(next_pseudo_legal_move())) {
+            String test_algeb = current_move.to_algeb_inner(false);
+            if(test_algeb.equals(algeb)) {
+                Board dummy = new Board(false);
                 dummy.set_from_fen(getFEN());
-
                 dummy.make_move(current_move);
-
-                if(!dummy.is_in_check(turnToMove))
-                {
-                    is_legal=true;
+                if(!dummy.is_in_check(turnToMove)) {
+                    is_legal = true;
                 }
             }
-
         }
-
         return is_legal;
     }
 
@@ -1425,303 +1314,197 @@ class Board {
         char to_piece=board[m.i2][m.j2];
         String target_algeb=""+algeb.charAt(2)+algeb.charAt(3);
 
-        if(from_piece_type==PAWN)
-        {
-            if(m.i1==m.i2)
-            {
+        if(from_piece_type == PAWN) {
+            if(m.i1 == m.i2) {
                 // pawn push
                 return target_algeb;
             }
-            else
-            {
-                return algeb.charAt(0)+"x"+target_algeb;
+            else {
+                return algeb.charAt(0) + "x" + target_algeb;
             }
         }
-        else
-        {
-
-            int test_ptr=move_table_ptr[m.i2][m.j2][from_piece_code];
-
+        else {
+            int test_ptr = move_table_ptr[m.i2][m.j2][from_piece_code];
             MoveDescriptor md;
-
-            Boolean ambiguity=false;
-
-            Boolean same_rank=false;
-            Boolean same_file=false;
-
-            int from_rank_list[]=new int[50];
-            int from_rank_cnt=0;
-            int from_file_list[]=new int[50];
-            int from_file_cnt=0;
-
-            do
-            {
-
-                md=move_table[test_ptr];
-
-                char to_piece_test=board[md.to_i][md.to_j];
-
-                if(to_piece_test==' ')
-                {
+            boolean ambiguity=false;
+            boolean same_rank=false;
+            boolean same_file=false;
+            int from_rank_list[] = new int[50];
+            int from_rank_cnt = 0;
+            int from_file_list[] = new int[50];
+            int from_file_cnt = 0;
+            do {
+                md = move_table[test_ptr];
+                char to_piece_test = board[md.to_i][md.to_j];
+                if(to_piece_test == ' ') {
                     test_ptr++;
                 }
-                else
-                {
-                    if((to_piece_test==from_piece)&&((md.to_i!=m.i1)||(md.to_j!=m.j1)))
-                    {
-
-                        Move test_move=new Move();
-
-                        test_move.orig_piece=from_piece;
-                        test_move.prom_piece=' ';
-                        test_move.i1=md.to_i;
-                        test_move.j1=md.to_j;
-                        test_move.i2=m.i2;
-                        test_move.j2=m.j2;
-
-                        Board dummy=new Board(false);
-
+                else {
+                    if((to_piece_test == from_piece) && ((md.to_i != m.i1) || (md.to_j != m.j1))) {
+                        Move test_move = new Move();
+                        test_move.orig_piece = from_piece;
+                        test_move.prom_piece = ' ';
+                        test_move.i1 = md.to_i;
+                        test_move.j1 = md.to_j;
+                        test_move.i2 = m.i2;
+                        test_move.j2 = m.j2;
+                        Board dummy = new Board(false);
                         dummy.set_from_fen(getFEN());
-
                         dummy.make_move(test_move);
-
-                        if(!dummy.is_in_check(turnToMove))
-                        {
-
-                            ambiguity=true;
-
-                            from_rank_list[from_rank_cnt++]=md.to_j;
-                            from_file_list[from_file_cnt++]=md.to_i;
-
-                            for(int r=0;r<from_rank_cnt;r++)
-                            {
-                                if(m.j1==from_rank_list[r])
-                                {
-                                    same_rank=true;
+                        if(!dummy.is_in_check(turnToMove)) {
+                            ambiguity = true;
+                            from_rank_list[from_rank_cnt++] = md.to_j;
+                            from_file_list[from_file_cnt++] = md.to_i;
+                            for(int r = 0; r < from_rank_cnt; r++) {
+                                if(m.j1 == from_rank_list[r]) {
+                                    same_rank = true;
                                 }
                             }
-
-                            for(int f=0;f<from_file_cnt;f++)
-                            {
-                                if(m.i1==from_file_list[f])
-                                {
-                                    same_file=true;
+                            for(int f = 0; f < from_file_cnt; f++) {
+                                if(m.i1 == from_file_list[f]) {
+                                    same_file = true;
                                 }
                             }
-
-
                         }
-
                     }
-
-                    if((from_piece_type&SLIDING)!=0)
-                    {
-                        test_ptr=md.next_vector;
+                    if((from_piece_type & SLIDING) != 0) {
+                        test_ptr = md.next_vector;
                     }
-                    else
-                    {
+                    else {
                         test_ptr++;
                     }
-
                 }
 
             }while(!move_table[test_ptr].end_piece);
 
-            String san=""+Character.toUpperCase(from_piece);
+            String san = "" + Character.toUpperCase(from_piece);
 
-            if(ambiguity&&(!same_file)&&(!same_rank))
-            {
-                san+=algeb.charAt(0);
+            if(ambiguity && (!same_file) && (!same_rank)) {
+                san += algeb.charAt(0);
             }
-            else
-            {
-                if(same_rank){san+=algeb.charAt(0);}
-                if(same_file){san+=algeb.charAt(1);}
+            else {
+                if(same_rank)
+                    san += algeb.charAt(0);
+                if(same_file)
+                    san += algeb.charAt(1);
             }
+            if(to_piece != ' ')
+                san += "x";
 
-            if(to_piece!=' ')
-            {
-                san+="x";
-            }
-
-            san+=target_algeb;
-
+            san += target_algeb;
             return san;
-
         }
-
     }
 
-    public String to_san(Move m)
-    {
-        String raw=to_san_raw(m);
+    public String to_san(Move m) {
+        String raw = to_san_raw(m);
+        if(m.prom_piece != ' ')
+            raw += "=" + Character.toUpperCase(m.prom_piece);
 
-        if(m.prom_piece!=' ')
-        {
-            raw+="="+Character.toUpperCase(m.prom_piece);
-        }
-
-        Board dummy=new Board(false);
-
+        Board dummy = new Board(false);
         dummy.set_from_fen(getFEN());
-
         dummy.make_move(m);
-
-        Boolean is_check=dummy.is_in_check(dummy.turnToMove);
-
+        boolean is_check = dummy.is_in_check(dummy.turnToMove);
         dummy.init_move_generator();
-
-        Boolean has_legal=false;
-
-        while((dummy.next_pseudo_legal_move())&&(!has_legal))
-        {
-            Board dummy2=new Board(false);
-
+        boolean has_legal = false;
+        while((dummy.next_pseudo_legal_move())&&(!has_legal)) {
+            Board dummy2 = new Board(false);
             dummy2.set_from_fen(dummy.getFEN());
-
             dummy2.make_move(dummy.current_move);
-
-            if(!dummy2.is_in_check(dummy.turnToMove))
-            {
-                has_legal=true;
+            if(!dummy2.is_in_check(dummy.turnToMove)) {
+                has_legal = true;
             }
         }
 
-        if(is_check)
-        {
-            if(has_legal)
-            {
-                raw+="+";
+        if(is_check) {
+            if(has_legal) {
+                raw += "+";
             }
-            else
-            {
-                raw+="#";
+            else {
+                raw += "#";
             }
         }
-        else if(!has_legal)
-        {
-            raw+="=";
+        else if(!has_legal) {
+            raw += "=";
         }
-
         return raw;
     }
 
-    public void make_move_show(Move m)
-    {
-
-        Boolean restart=false;
-
-//        if(engine_running) {
-//            restart=true;
-//            stop_engine();
-//        }
-
-        if(m!=null)
-        {
-
-            String san=to_san(m);
-
+    public void make_move_show(Move m) {
+        boolean restart = false;
+        if(m != null) {
+            String san = to_san(m);
             make_move(m);
-
             g.add_move(san, getFEN());
-
         }
-
-        bestmove_algeb="";
-
+        bestmove_algeb = "";
         drawBoard();
 
-        if(restart)
-        {
+        if(restart) {
             go_infinite();
         }
-
     }
 
-    private static int turn_of(char piece)
-    {
-        if((piece>='a')&&(piece<='z'))
-        {
+    private static int turn_of(char piece) {
+        if((piece >= 'a') && (piece <= 'z')) {
             return BTURN;
         }
         return WTURN;
     }
 
-    private static int color_of(char piece)
-    {
-        if((piece>='a')&&(piece<='z'))
-        {
+    private static int color_of(char piece) {
+        if((piece >= 'a') && (piece <= 'z')) {
             return BLACK;
         }
         return WHITE;
     }
 
-    private EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
-
+    private EventHandler<MouseEvent> mouseHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent mouseEvent) {
+            int x = (int) mouseEvent.getX();
+            int y = (int) mouseEvent.getY();
+            String type = mouseEvent.getEventType().toString();
+            if (type.equals("MOUSE_RELEASED")) {
 
-            int x=(int)mouseEvent.getX();
-            int y=(int)mouseEvent.getY();
-            String type=mouseEvent.getEventType().toString();
-            //System.out.println(type + " x " + x + " y " + y);
-            //System.out.println("i "+gc_i(x)+" j "+gc_j(y));
-
-            if(type.equals("MOUSE_RELEASED"))
-            {
-
-                if(is_drag_going)
-                {
-
-                    upper_gc.clearRect(0,0,board_size,board_size);
-                    is_drag_going=false;
-
-                    drag_to_i= pb_x(x);
-                    drag_to_j= pb_x(y);
-
+                if (is_drag_going) {
+                    upper_gc.clearRect(0, 0, board_size, board_size);
+                    is_drag_going = false;
+                    drag_to_i = pb_x(x);
+                    drag_to_j = pb_x(y);
                     // same square
-                    if((drag_to_i==drag_from_i)&&(drag_to_j==drag_from_j))
-                    {
+                    if ((drag_to_i == drag_from_i) && (drag_to_j == drag_from_j)) {
                         drawBoard();
                         return;
                     }
 
                     // wrong turn
-                    if(turn_of(orig_piece)!= turnToMove)
-                    {
+                    if (turn_of(orig_piece) != turnToMove) {
                         drawBoard();
                         return;
                     }
 
-                    if(
-                            (drag_to_i>=0)&&(drag_to_j>=0)&&(drag_to_i<=7)&&(drag_to_j<=7)
+                    if ((drag_to_i >= 0) && (drag_to_j >= 0) && (drag_to_i <= 7) && (drag_to_j <= 7)) {
+                        drag_to_x = bp_x(drag_to_i);
+                        drag_to_y = bp_y(drag_to_j);
 
-                    )
-                    {
+                        makemove.i1 = drag_from_i;
+                        makemove.j1 = drag_from_j;
+                        makemove.i2 = drag_to_i;
+                        makemove.j2 = drag_to_j;
+                        makemove.prom_piece = ' ';
 
-                        drag_to_x= bp_x(drag_to_i);
-                        drag_to_y= bp_y(drag_to_j);
-
-                        makemove.i1=drag_from_i;
-                        makemove.j1=drag_from_j;
-                        makemove.i2=drag_to_i;
-                        makemove.j2=drag_to_j;
-                        makemove.prom_piece=' ';
-
-                        if(is_move_legal(makemove))
-                        {
+                        if (is_move_legal(makemove)) {
                             make_move_show(makemove);
                         }
-                        else
-                        {
+                        else {
                             //System.out.println("Illegal move!");
                             drawBoard();
                             return;
                         }
 
                     }
-                    else
-                    {
+                    else {
                         drawBoard();
                         return;
                     }
@@ -1730,39 +1513,27 @@ class Board {
 
             }
 
-            if(type.equals("MOUSE_DRAGGED"))
-            {
-
-                if(is_drag_going)
-                {
-
-                    upper_gc.clearRect(0,0,board_size,board_size);
-
-                    put_piece_xy(upper_gc,x+drag_dx,y+drag_dy,drag_piece);
-
+            if (type.equals("MOUSE_DRAGGED")) {
+                if (is_drag_going) {
+                    upper_gc.clearRect(0, 0, board_size, board_size);
+                    put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
                 }
-                else
-                {
-                    is_drag_going=true;
-                    drag_from_i= pb_x(x);
-                    drag_from_j= pb_y(y);
-                    drag_from_x= bp_x(drag_from_i);
-                    drag_from_y= bp_y(drag_from_j);
-                    drag_dx=drag_from_x-x;
-                    drag_dy=drag_from_y-y;
-                    orig_drag_piece=fonts[drag_from_i][drag_from_j];
-                    orig_piece=board[drag_from_i][drag_from_j];
-                    drag_piece=(char)translit_light.get(orig_piece);
-
-                    orig_empty= darkSquare(drag_from_i,drag_from_j)?'+':' ';
-
-                    put_piece_xy(gc,drag_from_x,drag_from_y,orig_empty);
-
+                else {
+                    is_drag_going = true;
+                    drag_from_i = pb_x(x);
+                    drag_from_j = pb_y(y);
+                    drag_from_x = bp_x(drag_from_i);
+                    drag_from_y = bp_y(drag_from_j);
+                    drag_dx = drag_from_x - x;
+                    drag_dy = drag_from_y - y;
+                    orig_drag_piece = fonts[drag_from_i][drag_from_j];
+                    orig_piece = board[drag_from_i][drag_from_j];
+                    drag_piece = (char) translit_light.get(orig_piece);
+                    orig_empty = darkSquare(drag_from_i, drag_from_j) ? '+' : ' ';
+                    put_piece_xy(gc, drag_from_x, drag_from_y, orig_empty);
                 }
             }
-
         }
-
     };
 
     public void reset() {
@@ -1806,7 +1577,6 @@ class Board {
     public void go_infinite() {
         engine_intro=false;
         String fen= getFEN();
-        //runnable_engine_write_thread.command="position fen "+fen+"\ngo infinite\n";
         issue_command("position fen "+fen+"\ngo infinite\n");
         engine_running=true;
     }
@@ -1861,7 +1631,7 @@ class Board {
 
         char piece = san.charAt(0);
 
-        if((piece>='a')&&(piece<='z')) {
+        if((piece >= 'a') && (piece <= 'z')) {
             // pawn move
             file_algeb = piece;
             piece = 'P';
@@ -1871,7 +1641,7 @@ class Board {
             san = san.substring(1);
         }
 
-        Boolean takes = false;
+        boolean takes = false;
 
         if(san.charAt(0) == 'x') {
             takes = true;
@@ -1952,11 +1722,11 @@ class Board {
                 // disambiguation
                 int piece_code = code_of(piece);
                 int piece_type = piece_code & PIECE_TYPE;
-                Boolean is_sliding = ((piece_type & SLIDING)!=0);
+                boolean is_sliding = ((piece_type & SLIDING)!=0);
 
                 int san_ptr = move_table_ptr[m.i2][m.j2][piece_code];
                 MoveDescriptor md;
-                Boolean found = false;
+                boolean found = false;
                 char search_piece = piece;
                 if(turnToMove == BTURN)
                     search_piece = Character.toLowerCase(piece);
@@ -1969,8 +1739,8 @@ class Board {
                     }
                     else {
                         if(search_piece == to_piece) {
-                            Boolean file_match = true;
-                            Boolean rank_match = true;
+                            boolean file_match = true;
+                            boolean rank_match = true;
                             if(file_algeb != ' ') file_match = (md.to_i == m.i1);
                             if(rank_algeb != ' ') rank_match = (md.to_j == m.j1);
 
@@ -1988,145 +1758,53 @@ class Board {
                             }
                         }
                         if(is_sliding) {
-                            san_ptr=md.next_vector;
+                            san_ptr = md.next_vector;
                         }
-                        else
-                        {
+                        else {
                             san_ptr++;
                         }
                     }
-
                 }while((!found)&&(!md.end_piece));
-
             }
-
         }
-
-        if(san.length()>1)
-        {
-            if(san.charAt(0)=='=')
-            {
+        if(san.length() > 1) {
+            if(san.charAt(0) == '=') {
                 // promotion
-                m.prom_piece=san.charAt(1);
+                m.prom_piece = san.charAt(1);
             }
         }
-
         return m;
     }
 
-    public Boolean is_san_move_legal(String san)
-    {
-
-        Move m=san_to_move(san);
-
+    public boolean is_san_move_legal(String san) {
+        Move m = san_to_move(san);
         return is_move_legal(m);
-
     }
 
-    public void make_san_move(String san,Boolean show)
-    {
-
-        Move m=san_to_move(san);
-
-        Boolean is_legal=is_move_legal(m);
-
+    public void make_san_move(String san, boolean show) {
+        Move m = san_to_move(san);
+        boolean is_legal = is_move_legal(m);
         //System.out.println(m.to_algeb()+" legal: "+is_legal);
-
-        if(is_legal)
-        {
-            if(show)
-            {
+        if(is_legal) {
+            if(show) {
                 make_move_show(m);
             }
-            else
-            {
+            else {
                 make_move(m);
             }
         }
     }
 
-    private void make_user_san_move()
-    {
-        make_san_move(san_text.getText(),true);
-        san_text.setText("");
-    }
 
-
-    private Stage select_engine_stage;
-
-    private void select_engine()
-    {
-
-        MyFile engine_list_file=new MyFile("engine_list.txt");
-
-        engine_list=engine_list_file.read_lines();
-
-        if(engine_list==null)
-        {
-            //load_engine(null);
-            return;
-        }
-
-        Group select_engine_group=new Group();
-
-        ListView<String> list = new ListView<String>();
-
-        list.setMinWidth(600);
-
-        ObservableList<String> items =FXCollections.observableArrayList(
-                engine_list
-        );
-
-        list.setItems(items);
-
-        select_engine_group.getChildren().add(list);
-
-        Scene select_engine_scene=new Scene(select_engine_group,600,400);
-
-        select_engine_stage=new Stage();
-
-        select_engine_stage.initModality(Modality.APPLICATION_MODAL);
-        select_engine_stage.setX(30);
-        select_engine_stage.setY(30);
-        select_engine_stage.setTitle("Select engine from the list");
-        select_engine_stage.setScene(select_engine_scene);
-
-        list.setOnMouseClicked(new EventHandler<Event>() {
-
-            @Override
-            public void handle(Event event) {
-
-                int selected =  list.getSelectionModel().getSelectedIndex();
-
-                String path=engine_list[selected];
-
-                //load_engine(path);
-                select_engine_stage.close();
-            }
-
-        });
-
-        select_engine_stage.showAndWait();
-
-    }
-
-    public void highlight_move(Move m)
-    {
-
+    public void highlight_move(Move m) {
         highlight_gc.clearRect(0,0,board_size,board_size);
-
-        if(m==null)
-        {
+        if(m == null) {
             return;
         }
 
-        int arc=piece_size/2;
-        int size=piece_size-4;
-        highlight_gc.fillRoundRect(bp_x(m.i1)+2, bp_y(m.j1)+5,size,size,arc,arc);
-        highlight_gc.fillRoundRect(bp_x(m.i2)+2, bp_y(m.j2)+5,size,size,arc,arc);
-
+        int arc = piece_size / 2;
+        int size = piece_size - 4;
+        highlight_gc.fillRoundRect(bp_x(m.i1) + 2, bp_y(m.j1) + 5,size, size, arc, arc);
+        highlight_gc.fillRoundRect(bp_x(m.i2) + 2, bp_y(m.j2) + 5, size, size, arc, arc);
     }
-
-
-
 }

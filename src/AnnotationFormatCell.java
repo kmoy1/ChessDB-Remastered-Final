@@ -8,13 +8,20 @@ public class AnnotationFormatCell extends ListCell<String> {
     public static Color get_color(String item) {
         item = " " + item + " ";
 
-        if(item.contains(" !! ")) return(Color.GREEN);
-        else if(item.contains(" ! ")) return(Color.DARKGREEN);
-        else if(item.contains(" ?? ")) return(Color.RED);
-        else if(item.contains(" ? ")) return(Color.DARKRED);
-        else if(item.contains(" !? ")) return(Color.DARKBLUE);
-        else if(item.contains(" ?! ")) return(Color.LIGHTBLUE);
-        else if(item.contains(" - ")) return(Color.BLACK);
+        if(item.contains(" !! "))
+            return(Color.GREEN);
+        else if(item.contains(" ! "))
+            return(Color.DARKGREEN);
+        else if(item.contains(" ?? "))
+            return(Color.RED);
+        else if(item.contains(" ? "))
+            return(Color.DARKRED);
+        else if(item.contains(" !? "))
+            return(Color.DARKBLUE);
+        else if(item.contains(" ?! "))
+            return(Color.LIGHTBLUE);
+        else if(item.contains(" - "))
+            return(Color.BLACK);
         //Default
         return Color.GRAY;
 

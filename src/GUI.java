@@ -7,7 +7,7 @@ public class GUI {
     private Game g; //Game class.
     private Stage stage; //Top-Level Container (Window): Like JFrame in Swing
 
-    public HBox horizontal_box = new HBox(2); //Horizontal box contains board +
+    public HBox AppBox = new HBox(2); //Box contains board + book move + movelist + other features.
 
     public void shutdown() {
         board.stop_engine_process();
@@ -23,8 +23,8 @@ public class GUI {
         g.reset(board.getFEN());
         board.g = g;
 
-        horizontal_box.getChildren().add(board.main_box);
-        horizontal_box.getChildren().add(g.vertical_box);
+        AppBox.getChildren().add(board.main_box);
+        AppBox.getChildren().add(g.vertical_box);
     }
 
 }

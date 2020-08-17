@@ -1,12 +1,8 @@
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
-
 import javafx.stage.*;
-
 import javafx.stage.FileChooser;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -20,24 +16,17 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-
 import java.util.Set;
-
 import java.util.ArrayList;
 import java.util.List;
 import javafx.application.Platform;
 import javafx.scene.Group;
-
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
-
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-
-import javax.swing.JOptionPane;
 
 
 public class Game {
@@ -49,9 +38,9 @@ public class Game {
     private TextField pgn_name_text = new TextField();
     private String pgn;
     String initial_dir = "";
-    ListView<String> list = new ListView<String>();
-    ListView blist = new ListView<String>();
-    TextArea pgn_text = new TextArea();
+    ListView<String> movelist = new ListView<String>(); //Moves List of current game.
+    ListView blist = new ListView<String>(); //Book Moves List
+    TextArea pgn_text = new TextArea(); //PGN text area.
     public VBox vertical_box = new VBox(2);
     FileChooser f = new FileChooser();
     private Stage s;
@@ -71,11 +60,11 @@ public class Game {
         this.s = s;
         this.b = b;
 
-        book_file = new MyFile("book.txt");
+        book_file = new BasicFile("book.txt");
         book = new Hashtable();
 
         //Create buttons for clip_box (HBOX).
-        Button openPGNButton = createOpenPGNButton();
+        Button openPGNButton = createLoadPGNButton();
         Button save_as_pgn_button = createSavePGNButton();
         Button save_to_pgn_button = createSaveToPGNButton();
         Button clip_to_fen_button = createClipFENButton();
@@ -92,19 +81,16 @@ public class Game {
         clip_box.getChildren().add(pgn_to_clip_button);
         clip_box.getChildren().add(load_book_button);
         clip_box.getChildren().add(save_book_button);
-        //Set book_box to contain display of book moves given current position.
-        //
-        list.setMaxWidth(115);
-        book_box.getChildren().add(list);
+        //Set book_box to contain display of book moves given current position
+        movelist.setMaxWidth(115);
+        book_box.getChildren().add(movelist);
+
         blist.setMinWidth(400);
         blist.setStyle("-fx-font-family: monospace;");
         blist.setCellFactory((Callback<ListView<String>, ListCell<String>>) list -> new AnnotationFormatCell());
         book_box.getChildren().add(blist);
-
         vertical_box.getChildren().add(clip_box);
         vertical_box.getChildren().add(book_box);
-
-        Button start_deep_button = createStartDeepButton();
 
         int deep_height = 38;
         save_as_pgn_button.setMinHeight(deep_height);
@@ -113,16 +99,15 @@ public class Game {
         pgn_name_text.setStyle("-fx-font-size: " + (deep_height-18)
                 + "px;-fx-font-family: monospace;-fx-font-weight: bold;");
         pgn_name_text.setOnMouseClicked(pgn_name_text_clicked);
-        MyFile config = new MyFile("config.txt");
+        BasicFile config = new BasicFile("config.txt");
         String result = config.get_field("initial_dir");
-        if(result != null) {
+        if (result != null)
             pgn_name_text.setText(result+File.separator + "default.pgn");
-        }
+
         save_pgn_box.getChildren().add(pgn_name_text);
         save_to_pgn_button.setMinHeight(deep_height);
+        save_to_pgn_button.setMinWidth(200);
         save_pgn_box.getChildren().add(save_to_pgn_button);
-        start_deep_button.setMinHeight(deep_height);
-        save_pgn_box.getChildren().add(start_deep_button);
         vertical_box.getChildren().add(save_pgn_box);
         pgn_text.setWrapText(true);
         pgn_text.setStyle("-fx-display-caret: false;");
@@ -130,116 +115,86 @@ public class Game {
         pgn_text.setOnMouseClicked(mouseHandler);
         blist.setOnMouseClicked(mouseHandlerBook);
         vertical_box.getChildren().add(pgn_text);
-        list.setOnMouseClicked((EventHandler<Event>) event -> {
-            int selected = list.getSelectionModel().getSelectedIndex();
+        movelist.setOnMouseClicked((EventHandler<Event>) event -> {
+            int selected = movelist.getSelectionModel().getSelectedIndex();
             String pos = initial_position;
-            if(selected > 0) pos = positions[selected - 1];
+            if(selected > 0)
+                pos = positions[selected - 1];
             game_ptr = selected;
             this.b.set_from_fen_inner(pos, false);
             update_game();
         });
     }
 
-    private Button createStartDeepButton() {
-        Button start_deep_button = new Button();
-        start_deep_button.setText("Start Deep");
-        start_deep_button.setOnAction(e -> {
-            if(!this.b.is_engine_installed()) {
-                JOptionPane.showMessageDialog(null, "Please load a UCI engine!");
-                return;
-            }
-            create_start_deep_group();
-            start_deep_modal = new MyModal(start_deep_group,"Deep Analysis");
-            start_deep_modal.setxy(15, 515);
-            deep_stop_button.setOnAction(e1 -> interrupt_deep = true);
-            this.b.stop_engine();
-            this.b.list_legal_moves();
-            deep_legal_move_list_buffer = new String[500];
-            deep_legal_move_list_buffer_cnt = this.b.legal_move_list_buffer_cnt;
-            deep_legal_move_list_buffer = Arrays.copyOfRange(this.b.legal_move_list_buffer, 0, deep_legal_move_list_buffer_cnt);
-            Arrays.sort(deep_legal_move_list_buffer);
-            System.out.println("no legal moves: " + this.b.legal_move_list_buffer_cnt);
-            runnable_do_deep_thread = new MyRunnable();
-            runnable_do_deep_thread.kind = "do_deep";
-            runnable_do_deep_thread.b = this.b;
-            do_deep_thread = new Thread(runnable_do_deep_thread);
-            runnable_update_deep_thread = new MyRunnable();
-            runnable_update_deep_thread.kind = "update_deep";
-            runnable_update_deep_thread.b = this.b;
-            update_deep_thread = new Thread(runnable_update_deep_thread);
-            interrupt_deep = false;
-            this.b.deep_going = true;
-            deep_going = true;
-            do_deep_thread.start();
-            update_deep_thread.start();
-            start_deep_modal.show_and_wait();
-            this.b.deep_going = false;
-        });
-        return start_deep_button;
-    }
-
+    /**Create Save Book Button and return.**/
     private Button createSaveBookButton() {
-        Button save_book_button = new Button();
-        save_book_button.setText("Save Book");
-        save_book_button.setOnAction(e -> book_file.from_hash(book));
-        return save_book_button;
+        Button b = new Button();
+        b.setText("Save Book");
+        b.setOnAction(e -> book_file.from_hash(book));
+        return b;
     }
 
+    /**Create Load Book Button and return.**/
     private Button createLoadBookButton() {
-        Button load_book_button = new Button();
-        load_book_button.setText("Load Book");
-        load_book_button.setOnAction(e -> {
+        Button b = new Button();
+        b.setText("Load Book");
+        b.setOnAction(e -> {
             book = book_file.to_hash();
             update_game();
         });
-        return load_book_button;
+        return b;
     }
 
+    /**Create PGN-to-Clip Button and return.**/
     private Button createPGNClipButton() {
-        Button pgn_to_clip_button = new Button();
-        pgn_to_clip_button.setText("PGN->Clip");
-        pgn_to_clip_button.setOnAction(e -> copy_content(getPGN()));
-        return pgn_to_clip_button;
+        Button b = new Button();
+        b.setText("PGN->Clip");
+        b.setOnAction(e -> copy_content(getPGN()));
+        return b;
     }
 
+    /**Create Clip-to-PGN Button and return.**/
     private Button createClipPGNButton() {
-        Button clip_to_pgn_button = new Button();
-        clip_to_pgn_button.setText("Clip->PGN");
-        clip_to_pgn_button.setOnAction(e -> {
+        Button b = new Button();
+        b.setText("Clip->PGN");
+        b.setOnAction(e -> {
             String pgn = get_content();
             if(pgn != null) {
                 pgn_lines = pgn.split("\\r?\\n");
                 set_from_pgn_lines();
             }
         });
-        return clip_to_pgn_button;
+        return b;
     }
 
+    /**Create FEN-to-Clip Button and return.**/
     private Button createFENClipButton() {
-        Button fen_to_clip_button = new Button();
-        fen_to_clip_button.setText("Fen->Clip");
-        fen_to_clip_button.setOnAction(e -> copy_content(this.b.getFEN()));
-        return fen_to_clip_button;
+        Button b = new Button();
+        b.setText("Fen->Clip");
+        b.setOnAction(e -> copy_content(this.b.getFEN()));
+        return b;
     }
 
+    /**Create Clip-to-FEN Button and return.**/
     private Button createClipFENButton() {
-        Button clip_to_fen_button = new Button();
-        clip_to_fen_button.setText("Clip->Fen");
-        clip_to_fen_button.setOnAction(e -> {
+        Button b = new Button();
+        b.setText("Clip->Fen");
+        b.setOnAction(e -> {
             String fen = get_content();
             if(fen != null) {
                 this.b.set_from_fen(fen);
                 this.b.drawBoard();
             }
         });
-        return clip_to_fen_button;
+        return b;
     }
 
+    /**Create save to PGN Button and return.**/
     private Button createSaveToPGNButton() {
-        Button save_to_pgn_button = new Button();
-        save_to_pgn_button.setText("Save to PGN");
-        save_to_pgn_button.setOnAction(e -> {
-            look_for_initial_dir();
+        Button b = new Button();
+        b.setText("Save to PGN");
+        b.setOnAction(e -> {
+            setInitialDir();
             if(initial_dir != "") {
                 File dir = new File(initial_dir);
                 f.setInitialDirectory(dir);
@@ -249,35 +204,38 @@ public class Game {
             if(file == null) return;
             String path = file.getPath();
             initial_dir = path.substring(0, path.lastIndexOf(File.separator));
-            MyFile my_file = new MyFile(path);
+            BasicFile my_file = new BasicFile(path);
             getPGN();
             my_file.content = pgn;
             my_file.write_content();
         });
-        return save_to_pgn_button;
+        return b;
     }
 
+    /**Create button such that the current game will be saved as a PGN.**/
     private Button createSavePGNButton() {
-        Button save_as_pgn_button = new Button();
-        save_as_pgn_button.setText("Save as: ");
-        save_as_pgn_button.setOnAction(e -> {
-            String path = pgn_name_text.getText();
-            if(path.length() > 0) {
-                MyFile my_file = new MyFile(path);
+        Button b = new Button();
+        b.setText("Save as: ");
+        b.setOnAction(e -> {
+            String filepath = pgn_name_text.getText(); //Get user-input filename
+            //Create file with FILEPATH in source directory.
+            if(filepath.length() > 0) {
+                BasicFile file = new BasicFile(filepath);
                 getPGN();
-                my_file.content = pgn;
-                my_file.write_content();
-                System.out.println("Saved to file: " + path + "\n\nContent:\n\n" + my_file.content);
+                file.content = pgn;
+                file.write_content();
+                System.out.println("Saved to file: " + filepath + "\n\nContent:\n\n" + file.content);
             }
         });
-        return save_as_pgn_button;
+        return b;
     }
 
-    private Button createOpenPGNButton() {
-        Button open_pgn_button = new Button();
-        open_pgn_button.setText("Open PGN");
-        open_pgn_button.setOnAction(e -> {
-            look_for_initial_dir();
+    /**Create button for loading a PGN file and return designated button.**/
+    private Button createLoadPGNButton() {
+        Button b = new Button();
+        b.setText("Load PGN");
+        b.setOnAction(e -> {
+            setInitialDir();
             if(initial_dir != "") {
                 File dir = new File(initial_dir);
                 f.setInitialDirectory(dir);
@@ -287,14 +245,14 @@ public class Game {
             String path = file.getPath();
             pgn_name_text.setText(path);
             initial_dir = path.substring(0, path.lastIndexOf(File.separator));
-            MyFile config = new MyFile("config.txt");
+            BasicFile config = new BasicFile("config.txt");
             config.set_field("initial_dir", initial_dir);
-            MyFile my_file = new MyFile(path);
+            BasicFile my_file = new BasicFile(path);
             pgn_lines = my_file.read_lines();
             set_from_pgn_lines();
             highlight_name_in_path();
         });
-        return open_pgn_button;
+        return b;
     }
 
     public void reset(String initial_fen) {
@@ -306,7 +264,7 @@ public class Game {
     }
 
     private String fen_to_name(String fen) {
-        return "book" + File.separator + Encode32.encode(fen, true) + ".txt";
+        return "book" + File.separator + encode(fen, true) + ".txt";
     }
 
     private Hashtable get_pos(String fen) {
@@ -317,7 +275,7 @@ public class Game {
             String name = fen_to_name(fen);
             File f = new File(name);
             if(f.exists()) {
-                MyFile look_up = new MyFile(name);
+                BasicFile look_up = new BasicFile(name);
                 Hashtable pos = look_up.to_hash();
                 book.put(fen,pos);
                 return pos;
@@ -334,7 +292,7 @@ public class Game {
     private void store_pos(String fen, Hashtable hash) {
         fen = Board.fen_to_raw(fen);
         String name = fen_to_name(fen);
-        MyFile pos_file = new MyFile(name);
+        BasicFile pos_file = new BasicFile(name);
         pos_file.from_hash(hash);
     }
 
@@ -468,7 +426,7 @@ public class Game {
         for (BookMove temp : book_list) {
             String notation_as_string = "N/A";
             if(temp.notation >= 0) {
-                notation_as_string = notation_list[temp.notation];
+                notation_as_string = moveQualities[temp.notation];
             }
             String eval = "_";
             if(temp.is_analyzed) {
@@ -543,9 +501,9 @@ public class Game {
                 Arrays.copyOfRange(game_buffer, 0, move_ptr+1)
         );
 
-        list.setItems(items);
-        list.getSelectionModel().select(game_ptr);
-        list.scrollTo(game_ptr);
+        movelist.setItems(items);
+        movelist.getSelectionModel().select(game_ptr);
+        movelist.scrollTo(game_ptr);
 
         pgn_text.setText(getPGN());
 
@@ -609,7 +567,7 @@ public class Game {
         int line_cnt = 0;
         // read headers
         int empty_cnt = 0;
-        Boolean finished=false;
+        boolean finished=false;
         do {
             String line = pgn_lines[line_cnt++];
             if(line_cnt < pgn_lines.length) {
@@ -722,131 +680,73 @@ public class Game {
         select_notation_group.getChildren().add(select_notation_list);
     }
 
-    private void select_notation_for(String san)
-    {
-        String fen_before=initial_position;
-        if(move_ptr>0)
-        {
-            fen_before=positions[game_ptr-1];
+    private void select_notation_for(String san) {
+        String fen_before = initial_position;
+        if(move_ptr > 0) {
+            fen_before = positions[game_ptr - 1];
         }
-
-        Hashtable pos=get_pos(fen_before);
-
-        if(pos.get(san)==null)
-        {
-            BookMove new_book_move=new BookMove(san);
-            new_book_move.count=1;
-            pos.put(san,new_book_move.report_hash());
+        Hashtable pos = get_pos(fen_before);
+        if(pos.get(san)==null) {
+            BookMove new_book_move = new BookMove(san);
+            new_book_move.count = 1;
+            pos.put(san, new_book_move.report_hash());
         }
-        else
-        {
-            BookMove old_book_move=new BookMove(san);
+        else{
+            BookMove old_book_move = new BookMove(san);
             old_book_move.set_from_hash((Hashtable)pos.get(san));
-
-            // obtain new notation
-
             create_select_notation_group();
-
-            modal=new MyModal(select_notation_group,"Select");
-
-            select_notation_list.setOnMouseClicked(new EventHandler<Event>() {
-
-                @Override
-                public void handle(Event event) {
-
-                    selected_notation=
-                            notation_list.length-1-
-                                    select_notation_list.getSelectionModel().getSelectedIndex()
-                    ;
-
-                    modal.close();
-                }
-
+            modal = new MyModal(select_notation_group,"Select");
+            select_notation_list.setOnMouseClicked((EventHandler<Event>) event -> {
+                selected_notation= moveQualities.length - 1 - select_notation_list.getSelectionModel().getSelectedIndex();
+                modal.close();
             });
-
-            selected_notation=old_book_move.notation;
-
+            selected_notation = old_book_move.notation;
             modal.show_and_wait();
-
-            // end obtain new notation
-
-            old_book_move.notation=selected_notation;
-
-            pos.put(san,old_book_move.report_hash());
-
-            store_pos(fen_before,pos);
-
+            old_book_move.notation = selected_notation;
+            pos.put(san, old_book_move.report_hash());
+            store_pos(fen_before, pos);
         }
-
-        //book_file.from_hash(book);
-
         update_book();
     }
 
-    private EventHandler<MouseEvent> mouseHandlerBook = new EventHandler<MouseEvent>() {
-
+    private EventHandler<MouseEvent> mouseHandlerBook = new EventHandler<>() {
         @Override
         public void handle(MouseEvent mouseEvent) {
 
-            int x=(int)mouseEvent.getX();
-            int y=(int)mouseEvent.getY();
-
-            String type=mouseEvent.getEventType().toString();
-
-            if(type.equals("MOUSE_CLICKED"))
-            {
-
-                int j=blist.getSelectionModel().getSelectedIndex();
-
-                sel_book_move=j;
-
-                int size=book_list.size();
-
-                if((j>=0)&&(j<size))
-                {
-
-                    String san=book_list.get(j).san;
-
-                    if(x<120)
-                    {
-
-                        b.make_san_move(san,true);
-
+            int x = (int) mouseEvent.getX();
+            int y = (int) mouseEvent.getY();
+            String type = mouseEvent.getEventType().toString();
+            if (type.equals("MOUSE_CLICKED")) {
+                int j = blist.getSelectionModel().getSelectedIndex();
+                sel_book_move = j;
+                int size = book_list.size();
+                if ((j >= 0) && (j < size)) {
+                    String san = book_list.get(j).san;
+                    if (x < 120) {
+                        b.make_san_move(san, true);
                     }
-                    else
-                    {
-
+                    else {
                         select_notation_for(san);
-
                     }
-
                 }
-
             }
-
         }
-
     };
 
-    private void look_for_initial_dir()
-    {
-        if(initial_dir.equals(""))
-        {
-            MyFile config=new MyFile("config.txt");
-            String result=config.get_field("initial_dir");
-            if(result!=null)
-            {
+    /** Set initial directory for loading from local files.**/
+    private void setInitialDir() {
+        if(initial_dir.equals("")) {
+            BasicFile config = new BasicFile("config.txt");
+            String result = config.get_field("initial_dir");
+            if(result != null)
                 initial_dir=result;
-            }
         }
     }
 
-    private Clipboard clip=Clipboard.getSystemClipboard();
-
+    private Clipboard clip = Clipboard.getSystemClipboard();
     private Hashtable book;
-
-    private MyFile book_file;
-    final private String[] notation_list={"??","?","?!","-","!?","!","!!"};
+    private BasicFile book_file;
+    final private String[] moveQualities = {"??", "?", "?!", "-", "!?", "!", "!!"};
 
     public void record_eval(String fen, String san, int eval) {
         Hashtable pos = get_pos(fen);
@@ -868,55 +768,15 @@ public class Game {
         update_book();
     }
 
-    Group start_deep_group;
-    Button deep_stop_button;
-    //TextArea deep_text;
     Label deep_text;
     MyModal start_deep_modal;
     ProgressBar progress;
 
-    private void create_start_deep_group() {
-        int width = 440;
-        start_deep_group = new Group();
-        deep_stop_button = new Button();
-        deep_stop_button.setText("Stop");
-        deep_stop_button.setTranslateX(10);
-        deep_stop_button.setTranslateY(10);
-        deep_text = new Label();
-        deep_text.setTranslateX(15);
-        deep_text.setTranslateY(10);
-        progress = new ProgressBar();
-        progress.setMinWidth(width - 20);
-        progress.setTranslateX(10);
-        VBox deep_vbox = new VBox(20);
-        deep_vbox.setMinWidth(width);
-        deep_vbox.setMaxWidth(width);
-        deep_vbox.setMinHeight(160);
-        deep_vbox.setMaxHeight(160);
-        deep_vbox.getChildren().add(deep_stop_button);
-        deep_vbox.getChildren().add(deep_text);
-        deep_vbox.getChildren().add(progress);
-        start_deep_group.getChildren().add(deep_vbox);
-    }
-
-    private MyRunnable runnable_do_deep_thread;
-    private MyRunnable runnable_update_deep_thread;
-
-    private Thread do_deep_thread;
-    private Thread update_deep_thread;
-
-    private Boolean interrupt_deep;
-
     private int do_deep_i;
-
     private String[] deep_legal_move_list_buffer;
-    private int deep_legal_move_list_buffer_cnt=0;
-
-    private Boolean deep_going;
-
+    private int deep_legal_move_list_buffer_cnt = 0;
+    private boolean deep_going;
     private String deep_san;
-
-    Board test_board = new Board(false);
 
     public void do_deep() {
         do_deep_i = 0;
@@ -924,107 +784,57 @@ public class Game {
         String fen = b.getFEN();
 
         for(int i = 0; i < deep_legal_move_list_buffer_cnt; i++) {
-            Platform.runLater(new Runnable() {
-                public void run() {
-                    deep_san = deep_legal_move_list_buffer[do_deep_i++];
-                    b.set_from_fen(fen);
-                    b.make_san_move(deep_san, false);
-                    b.go_infinite();
-                    try {
-                        Thread.sleep(250);
-                    }
-                    catch(InterruptedException ex) {}
-                    b.stop_engine();
-                    b.set_from_fen(fen);
-                    record_eval(fen,deep_san,-b.score_numerical);
-
-                }
-
+            Platform.runLater(() -> {
+                deep_san = deep_legal_move_list_buffer[do_deep_i++];
+                b.set_from_fen(fen);
+                b.make_san_move(deep_san, false);
+                b.go_infinite();
+                try {Thread.sleep(250);}
+                catch(InterruptedException ex) {}
+                b.stop_engine();
+                b.set_from_fen(fen);
+                record_eval(fen,deep_san,-b.score_numerical);
             });
 
-            try
-            {
-                Thread.sleep(300);
-            }
-            catch(InterruptedException ex)
-            {
-
-            }
-
-            if(interrupt_deep)
-            {
-
-                break;
-
-            }
+            try {Thread.sleep(300);}
+            catch(InterruptedException e) {}
 
         }
-
-        deep_going=false;
-
-        Platform.runLater(new Runnable()
-        {
-
-            public void run()
-            {
-                start_deep_modal.close();
-            }
-
-        });
+        deep_going = false;
+        Platform.runLater(() -> start_deep_modal.close());
 
     }
 
-    public void update_deep()
-    {
-
-        try
-        {
+    public void update_deep() {
+        try {
             Thread.sleep(500);
         }
-        catch(InterruptedException ex)
-        {
+        catch(InterruptedException ex) {}
 
-        }
-
-        while(deep_going)
-        {
-
-            Platform.runLater(new Runnable()
-            {
-
-                public void run()
-                {
-                    deep_text.setText("Examining: "+deep_san);
-                    double p=(double)do_deep_i/(double)deep_legal_move_list_buffer_cnt;
-
-                    progress.setProgress(p);
-                }
-
+        while(deep_going) {
+            Platform.runLater(() -> {
+                deep_text.setText("Examining: " + deep_san);
+                double p = (double) do_deep_i / (double) deep_legal_move_list_buffer_cnt;
+                progress.setProgress(p);
             });
 
-            try
-            {
+            try {
                 Thread.sleep(1000);
             }
-            catch(InterruptedException ex)
-            {
-
-            }
+            catch(InterruptedException ex) {}
         }
     }
 
-    private void copy_content(String content_as_string)
-    {
+    private void copy_content(String content_as_string) {
         ClipboardContent content = new ClipboardContent();
         content.putString(content_as_string);
         clip.setContent(content);
         System.out.println("Content copied to clipboard:\n\n"+content_as_string);
     }
 
-    private String get_content()
-    {
-        String content_as_string=clip.getString();
-        System.out.println("Content copied from clipboard:\n\n"+content_as_string);
+    private String get_content() {
+        String content_as_string = clip.getString();
+        System.out.println("Content copied from clipboard:\n\n" + content_as_string);
         return content_as_string;
     }
 
@@ -1042,6 +852,58 @@ public class Game {
         }
     }
 
+    public static String encode(String s, boolean encode) {
+        byte[] bytes = s.getBytes();
+        int mask = encode? 5:8;
+        String binary = "";
+
+        int letter = 'a'; //Implicit casts.
+        int number = '0';
+
+        for (byte b : bytes) {
+            int val = b;
+
+            if(!encode) {
+                char x = (char)b;
+                if((x >= 'a') && (x <= 'z')) {
+                    val = (int) x - letter;
+                }
+                else {
+                    val = (int) x - number + 26;
+                }
+            }
+
+            for (int i = 0; i < (encode?8:5); i++) {
+                binary += ((val & (encode? 128:16)) == 0 ? "0" : "1");
+                val <<= 1;
+            }
+        }
+        int mod = binary.length() % mask;
+        if(encode) {
+            while(mod++<mask){
+                binary = "0" + binary;
+            }
+        }
+        else {
+            binary = binary.substring(mod);
+        }
+        String out = "";
+
+        while(binary.length() > 0) {
+            String chunk = binary.substring(0, mask);
+            binary = binary.substring(mask);
+            int b = Integer.parseInt(chunk, 2);
+            if(encode) {
+                b = b<26? b + letter: b - 26 + number;
+            }
+            else {}
+            char c = (char) b;
+            out += c;
+        }
+        return out;
+    }
+
     private EventHandler<MouseEvent> pgn_name_text_clicked = mouseEvent -> highlight_name_in_path();
+
 
 }

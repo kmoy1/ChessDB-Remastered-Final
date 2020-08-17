@@ -8,7 +8,6 @@ import java.io.*;
  * @author Kevin Moy **/
 public class Main extends Application {
     public GUI gui;
-    public static int timer;
 
     public static void main(String[] args) {
         launch(args);
@@ -31,7 +30,7 @@ public class Main extends Application {
         primaryStage.setTitle("ChessDB-Remastered");
         Group root = new Group();
         gui = new GUI(primaryStage);
-        root.getChildren().add(gui.horizontal_box);
+        root.getChildren().add(gui.AppBox);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();
