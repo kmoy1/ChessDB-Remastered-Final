@@ -1,4 +1,4 @@
-# ChessDB-Remastered-Final (BETA)
+# ChessDB-Remastered (BETA)
 Chess Database + Interface to play, load, and save chess games. 
 
 UPDATES:
