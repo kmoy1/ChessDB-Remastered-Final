@@ -2,50 +2,33 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8506fdb9-2719-425c-89b1-8d6fd0bba48b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqgeiclkfvxcibn.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobydc2dqf22c4nlqgixtgucqgmxtql0qkbideucqkaxvetsckffuetssebrcas0rnnysazbt.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobydc2dqf22c4nlqgixtiubtf22c4ucqkbidcucqkaxvetsckffuetsseb1sas0rnnysazrw.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyde2bphaxtk2dqgextgucqgmxtql0qkbideucqkaxvetsckffuetsseb1sas0rnnysazzw.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/bzdcytrnnrg22rpobyha2brobyhalzsny0s4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/dsgfrhc01cnzzc42dqobydc2dqoaxte1rvf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqgeiclkfvxcibn.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/he1tcofvwe1tsf3yha2dqgfyha2bphaxti2btf20famzpgvhdel0qkbifamkqkbic4usoijiuwqrrkiqgeiclkfvxcibn.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/book/hemlcofvwemlsf3yha2dqgfyha2bpgjxde1rsf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqhoiclkfvxcibn.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/f" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobydc2dqf20xamrphaxtgucqgmxtql0qkbideucqkaxvetsckffuetssebrcas0rnnysazbt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyde2bpgvydelzwoays4m0qkazs4obpkbifamsqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyhamlqf22c4ntqgextgucqgmxtql0qkbideucqkaxvetsckffuetssebrcas0rnnysazbt.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyhamlqf22c4ntqgextiubtf22c4ucqkbidcucqkaxvetsckffuetsseb1sas0rnnysazzw.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/dsnzrhc01cnzzc42dqobyhamlqoaxtk2bsf22c4ncqgmxtql0qkbifamkqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/book/he1tcofvwe1tsf3yha2dqoazhalzvoazc4ntqgextgucqgmxtql0qkbideucqkaxvetsckffuetsseb1sas0rnnysazzw.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqgeiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqgeiclkfvxcibn.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgmxtiubtf22c4ucqkbidcucqkaxvetsckffuetsseb1sas0rnnysazjw.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqoayxa2dqf22c4ndqgmxtiubtf22c4ucqkbidcucqkaxvetsckffuetsseb1sas0rnnysazjw.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyha2dqf22c4obphaxtql0qkbifaucqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/a2tomjywwytooixxa2dqobyha2dqf22c4obphaxtql0qkbifaucqkbic4usoijiuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/book/aojxge2llmjxhel1qobyha2dqobyc4obphaxtiubtf22c4ucqkbidcucqkaxvetsckffuetssebrcas0rnnysazjt.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/aojxge2llmjxhel1qobyha2dqobyc4obphaxtiubtf22c4ucqkbidcucqkaxvetsckffuetssebrcas0rnnysazjt.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$2.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board$3.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/bzdcytrnnrg22rpobyha2brobyhalzsny0s4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqhoiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/bzdcytrnnrg22rpobyha2brobyhalzsny0s4ndqgjis4ncqgmxtql0qkbifamkqkbic4usoiiyuwqsokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/dsgfrhc01cnzzc42dqobydc2dqoaxte1rvf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqgeiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/dsgfrhc01cnzzc42dqobydc2dqoaxte1rvf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqgeiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/he1tcofvwe1tsf3yha2dqgfyha2bphaxti2btf20famzpgvhdel0qkbifamkqkbic4usoijiuwqrrkiqgeiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/he1tcofvwe1tsf3yha2dqgfyha2bphaxti2btf20famzpgvhdel0qkbifamkqkbic4usoijiuwqrrkiqgeiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book/hemlcofvwemlsf3yha2dqgfyha2bpgjxde1rsf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqhoiclkfvxcibn.txt" beforeDir="false" afterPath="$PROJECT_DIR$/book/hemlcofvwemlsf3yha2dqgfyha2bpgjxde1rsf20hamsrf2zeemkqgmxtql0qkbifamkqkbic4usoiiyuwmkokiqhoiclkfvxcibn.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/AnnotationFormatCell.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/AnnotationFormatCell.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/BasicFile.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/BasicFile.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Board.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/BookMoveComparator.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/BookMoveComparator.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Encode32.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$3.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$4.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$5.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game$6.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/GUI.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/GUI.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/Game.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyFile.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyRunnable$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyRunnable.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyRunnable.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AnnotationFormatCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/AnnotationFormatCell.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyModal.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyModal.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyTokenizer.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/ChessDB_Remastered/MyTokenizer.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Board.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Board.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/BookMove.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BookMove.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/BookMoveComparator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BookMoveComparator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Encode32.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/GUI.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Game.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MoveDescriptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MoveDescriptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MyFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BasicFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MyModal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MyModal.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MyRunnable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MyRunnable.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MyTokenizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MyTokenizer.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

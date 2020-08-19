@@ -4,6 +4,6 @@ Nc6
 	is_analyzed
 	false
 	count
-	1
+	3
 	notation
 	-1

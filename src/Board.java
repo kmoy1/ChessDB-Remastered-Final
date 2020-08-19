@@ -11,7 +11,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.TextField;
-import java.io.IOException;
 import javafx.scene.control.TextArea;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,13 +18,11 @@ import javax.swing.JOptionPane;
 import java.util.Arrays;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.event.Event;
 import javafx.stage.FileChooser;
-import javafx.stage.*;
 
 /** Board class which represents code for playable action on a board interface.
  * This class handles all mouse listening, movement, and gameplay logic.
@@ -40,7 +37,7 @@ class Board {
 
     private String[] engine_list = new String[BasicFile.MAX_LINES];
     private FileChooser f = new FileChooser();
-    private boolean with_gui;
+    private boolean trueBoard; //Board that GUI shows.
     private String uci_engine_path = "";
     private boolean engine_intro = true;
 
@@ -110,7 +107,6 @@ class Board {
 
     private TextField fen_text = new TextField();
     private TextField san_text = new TextField();
-    private TextArea engine_text = new TextArea();
     private TextArea legal_move_list = new TextArea();
 
     private Canvas canvas;
@@ -205,9 +201,10 @@ class Board {
 
     /** Constructor for standard Board instance: sets HBox + VBox chain with
      * Board + Pieces, commentary, movelist, etc. Run with GUI class. **/
-    public Board(boolean set_with_gui) {
-        with_gui = set_with_gui;
-        if (with_gui) {
+    public Board(boolean tb) {
+        trueBoard = tb;
+        if (trueBoard) {
+            //Build GUI to display.
             flip = false;
             canvas = new Canvas(board_size,board_size + info_bar_size);
             highlight_canvas = new Canvas(board_size, board_size);
@@ -219,26 +216,26 @@ class Board {
             canvas_group.getChildren().add(engine_canvas);
             canvas_group.getChildren().add(upper_canvas);
 
-            Button flip_button=new Button();
+            Button flip_button = new Button();
             flip_button.setText("Flip");
             flip_button.setOnAction(e -> flip());
 
-            Button set_fen_button=new Button();
-            set_fen_button.setText("Set Fen");
+            Button set_fen_button = new Button();
+            set_fen_button.setText("Generate FEN");
             set_fen_button.setOnAction(e -> set_from_fen(fen_text.getText()));
 
-            Button report_fen_button=new Button();
-            report_fen_button.setText("Report Fen");
+            Button report_fen_button = new Button();
+            report_fen_button.setText("Load From FEN");
             report_fen_button.setOnAction(e -> drawBoard());
 
-            Button reset_button=new Button();
-            reset_button.setText("Reset");
+            Button reset_button = new Button();
+            reset_button.setText("New Game");
             reset_button.setOnAction(e -> reset());
 
-            Button delete_button=new Button();
-            delete_button.setText("Delete");
+            Button delete_button = new Button();
+            delete_button.setText("Take Back Move");
             delete_button.setOnAction(e -> {
-                set_from_fen_inner(g.delete_move(),false);
+                set_from_fen_inner(g.takeback(),false);
                 make_move_show(null);
             });
 
@@ -250,19 +247,19 @@ class Board {
 
             vertical_box.getChildren().add(canvas_group);
 
-            Button to_begin_button=new Button();
+            Button to_begin_button = new Button();
             to_begin_button.setText("<<");
             to_begin_button.setOnAction(e -> g.to_begin());
 
-            Button back_button=new Button();
+            Button back_button = new Button();
             back_button.setText("<");
             back_button.setOnAction(e -> g.back());
 
-            Button forward_button=new Button();
+            Button forward_button = new Button();
             forward_button.setText(">");
             forward_button.setOnAction(e -> g.forward());
 
-            Button to_end_button=new Button();
+            Button to_end_button = new Button();
             to_end_button.setText(">>");
             to_end_button.setOnAction(e -> g.to_end());
 
@@ -276,11 +273,6 @@ class Board {
             vertical_box.getChildren().add(controls_box);
 
             main_box.getChildren().add(vertical_box);
-
-            engine_text.setMaxHeight(100);
-
-            engine_text.setFont(engine_font);
-            vertical_box.getChildren().add(engine_text);
 
             upper_canvas.setOnMouseDragged(mouseHandler);
             upper_canvas.setOnMouseClicked(mouseHandler);
@@ -928,7 +920,7 @@ class Board {
             fullmove_number = Integer.parseInt(fullmove_number_part);
         }
 
-        if((with_gui) && (!deep_going)) {
+        if((trueBoard) && (!deep_going)) {
             drawBoard();
             if(do_reset_game) {
                 reset_game();
@@ -1439,10 +1431,6 @@ class Board {
         }
         bestmove_algeb = "";
         drawBoard();
-
-        if(restart) {
-            go_infinite();
-        }
     }
 
     private static int turn_of(char piece) {
@@ -1546,7 +1534,7 @@ class Board {
         fullmove_number = 1;
         turnToMove = WTURN;
         //Reset position.
-        if(with_gui) {
+        if(trueBoard) {
             is_drag_going = false;
             bestmove_algeb = "";
             drawBoard();
@@ -1554,50 +1542,50 @@ class Board {
         }
     }
 
-    public void stop_engine_process() {
-        engine_go_button.setDisable(true);
-        engine_stop_button.setDisable(true);
-        engine_make_button.setDisable(true);
-        if(!(uci_engine_path.equals(""))) {
-            engine_read_thread.interrupt();
-            uci_engine_process.destroy();
-            uci_engine_path="";
-        }
-    }
+//    public void stop_engine_process() {
+//        engine_go_button.setDisable(true);
+//        engine_stop_button.setDisable(true);
+//        engine_make_button.setDisable(true);
+//        if(!(uci_engine_path.equals(""))) {
+//            engine_read_thread.interrupt();
+//            uci_engine_process.destroy();
+//            uci_engine_path="";
+//        }
+//    }
 
-    private void issue_command(String command) {
-        try {
-            engine_out.write(command.getBytes());
-            engine_out.flush();
-        }
-        catch(IOException ex) {}
-    }
+//    private void issue_command(String command) {
+//        try {
+//            engine_out.write(command.getBytes());
+//            engine_out.flush();
+//        }
+//        catch(IOException ex) {}
+//    }
 
+//
+//    public void go_infinite() {
+//        engine_intro=false;
+//        String fen= getFEN();
+//        issue_command("position fen "+fen+"\ngo infinite\n");
+//        engine_running=true;
+//    }
 
-    public void go_infinite() {
-        engine_intro=false;
-        String fen= getFEN();
-        issue_command("position fen "+fen+"\ngo infinite\n");
-        engine_running=true;
-    }
-
-    public void stop_engine() {
-        if(engine_running) {
-            issue_command("stop\n");
-            while(engine_running){
-                try {
-                    Thread.sleep(100);
-                }
-                catch(InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                // record eval
-                bestmove.from_algeb(bestmove_algeb);
-                String bestmove_san=to_san(bestmove);
-                //g.record_eval(report_fen(),bestmove_san,score_numerical);
-            }
-        }
-    }
+//    public void stop_engine() {
+//        if(engine_running) {
+//            issue_command("stop\n");
+//            while(engine_running){
+//                try {
+//                    Thread.sleep(100);
+//                }
+//                catch(InterruptedException ex) {
+//                    Thread.currentThread().interrupt();
+//                }
+//                // record eval
+//                bestmove.from_algeb(bestmove_algeb);
+//                String bestmove_san=to_san(bestmove);
+//                //g.record_eval(report_fen(),bestmove_san,score_numerical);
+//            }
+//        }
+//    }
     /** Convert standard algebraic notation to a move on the chess board.**/
     public Move san_to_move(String san) {
         Move m = new Move();

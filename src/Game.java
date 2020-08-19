@@ -380,7 +380,7 @@ public class Game {
     }
 
     /** Delete latest move off move list. **/
-    public String delete_move() {
+    public String takeback() {
         sel_book_move = -1;
         if(game_ptr < move_ptr) {
             move_ptr = game_ptr;
@@ -788,10 +788,10 @@ public class Game {
                 deep_san = deep_legal_move_list_buffer[do_deep_i++];
                 b.set_from_fen(fen);
                 b.make_san_move(deep_san, false);
-                b.go_infinite();
+                //b.go_infinite();
                 try {Thread.sleep(250);}
                 catch(InterruptedException ex) {}
-                b.stop_engine();
+                //b.stop_engine();
                 b.set_from_fen(fen);
                 record_eval(fen,deep_san,-b.score_numerical);
             });

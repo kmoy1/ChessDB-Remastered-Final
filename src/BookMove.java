@@ -1,10 +1,10 @@
 import java.util.Hashtable;
 
+/** Represents the Book Move interface for this app. **/
 public class BookMove {
-
     public String san;
     public int notation;
-    public Boolean is_analyzed;
+    public boolean is_analyzed;
     public int eval;
     public int count;
 
@@ -18,25 +18,21 @@ public class BookMove {
     }
 
     public void set_from_hash(Hashtable hash) {
-        if(hash.get("notation") != null) {
+        if(hash.get("notation") != null)
             notation = Integer.parseInt(hash.get("notation").toString());
-        }
 
-        if(hash.get("is_analyzed") != null) {
-            is_analyzed=hash.get("is_analyzed").toString().equals("true");
-        }
+        if(hash.get("is_analyzed") != null)
+            is_analyzed = hash.get("is_analyzed").toString().equals("true");
 
-        if(hash.get("eval") != null) {
+        if(hash.get("eval") != null)
             eval = Integer.parseInt(hash.get("eval").toString());
-        }
 
-        if(hash.get("count")!=null) {
+        if(hash.get("count")!=null)
             count = Integer.parseInt(hash.get("count").toString());
-        }
     }
 
-    public BookMove(String set_san) {
-        san = set_san;
+    public BookMove(String SAN) {
+        san = SAN;
         notation = -1;
         is_analyzed = false;
         eval = 0;

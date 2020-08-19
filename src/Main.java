@@ -39,7 +39,7 @@ public class Main extends Application {
 
     @Override
     public void stop() {
-        gui.shutdown();
+        gui.shutdown(); //Does nothing atm
         System.out.println("ChessDB-Remastered Finish");
     }
 }

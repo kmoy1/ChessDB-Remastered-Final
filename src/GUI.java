@@ -10,7 +10,8 @@ public class GUI {
     public HBox AppBox = new HBox(2); //Box contains board + book move + movelist + other features.
 
     public void shutdown() {
-        board.stop_engine_process();
+        //board.stop_engine_process();
+        //Do nothing, for now.
     }
 
     /**Initialize stage, board, and create a game instance from the stage + board.**/
