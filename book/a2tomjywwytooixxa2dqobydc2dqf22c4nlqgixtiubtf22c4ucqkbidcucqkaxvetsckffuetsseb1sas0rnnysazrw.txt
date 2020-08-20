@@ -4,6 +4,6 @@ d4
 	is_analyzed
 	false
 	count
-	1
+	2
 	notation
 	-1

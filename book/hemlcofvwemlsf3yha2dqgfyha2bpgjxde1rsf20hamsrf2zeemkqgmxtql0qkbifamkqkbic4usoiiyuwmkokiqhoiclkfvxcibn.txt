@@ -4,6 +4,6 @@ Qxf7#
 	is_analyzed
 	false
 	count
-	2
+	3
 	notation
 	-1

@@ -279,26 +279,18 @@ class Board {
             upper_canvas.setOnMouseReleased(mouseHandler);
 
             gc = canvas.getGraphicsContext2D();
-
+            //Set 2-square highlighting graphics context for highlighting before square + after square
+            //after making a move.
             highlight_gc = highlight_canvas.getGraphicsContext2D();
             highlight_canvas.setOpacity(0.2);
             highlight_gc.setFill(Color.rgb(255,255,0));
 
             upper_gc = upper_canvas.getGraphicsContext2D();
-            engine_gc = engine_canvas.getGraphicsContext2D();
 
-            board_color = Color.rgb(255, 220, 220);
+            board_color = Color.rgb(67,70,75);
             piece_color = Color.rgb(0, 0, 0);
-            engine_color = Color.rgb(0, 0, 255);
-
         }
         reset();
-    }
-
-    public boolean is_engine_installed() {
-        if(uci_engine_path == null) return false;
-        if(uci_engine_path.equals("")) return false;
-        return true;
     }
 
     private void init_move_generator() {
@@ -358,9 +350,9 @@ class Board {
                                 &&
                                 (castling_rights.indexOf('k')>=0)
                                 &&
-                                (!checkHelper(4,0,BLACK))
+                                (!checkHelper(4, 0, BLACK))
                                 &&
-                                (!checkHelper(5,0,BLACK))
+                                (!checkHelper(5, 0, BLACK))
                         ) {
                             return true;
                         }
@@ -425,98 +417,54 @@ class Board {
                     }
 
                 }
-                else if((to_piece!=' ')&&(to_piece_color==current_move_gen_piece_color))
-                {
-
+                else if((to_piece != ' ') && (to_piece_color == current_move_gen_piece_color)) {
                     // own piece
                     if(is_current_move_gen_piece_sliding)
-                    {
                         move_gen_curr_ptr=md.next_vector;
-                    }
                     else
-                    {
                         move_gen_curr_ptr++;
-                    }
                 }
-                else
-                {
-
-                    boolean is_capture=to_piece!=' ';
-
-                    if(is_capture)
-                    {
-
+                else {
+                    boolean is_capture = to_piece != ' ';
+                    if(is_capture) {
                         // capture
                         if(is_current_move_gen_piece_sliding)
-                        {
-                            move_gen_curr_ptr=md.next_vector;
-                        }
+                            move_gen_curr_ptr = md.next_vector;
                         else
-                        {
                             move_gen_curr_ptr++;
-                        }
-
                     }
                     else
                     {
                         move_gen_curr_ptr++;
                     }
-
-                    if(current_move_gen_piece_type==PAWN)
-                    {
-
-                        if(curr_i!=to_i)
-                        {
+                    if(current_move_gen_piece_type == PAWN) {
+                        if(curr_i != to_i) {
                             // sidewise move may be ep capture
-                            String test_algeb=Move.ij_to_algeb(to_i, to_j);
+                            String test_algeb = Move.ij_to_algeb(to_i, to_j);
                             if(test_algeb.equals(ep_square_algeb))
-                            {
-                                is_capture=true;
-                            }
+                                is_capture = true;
                         }
 
-                        if(is_capture)
-                        {
+                        if(is_capture) {
                             // pawn captures only to the sides
-                            if(curr_i!=to_i)
-                            {
+                            if(curr_i != to_i)
                                 return true;
-                            }
                         }
-                        else
-                        {
+                        else {
                             // pawn moves only straight ahead
-                            if(curr_i==to_i)
-                            {
-                                if(Math.abs(to_j-curr_j)<2)
-                                {
+                            if(curr_i==to_i) {
+                                if(Math.abs(to_j - curr_j) < 2 || board[curr_i][curr_j + (to_j - curr_j)/2] == ' ')
                                     // can always move one square forward
                                     return true;
-                                }
-                                else
-                                {
-                                    if(board[curr_i][curr_j+(to_j-curr_j)/2]==' ')
-                                    {
-                                        // push by two requires empty passing square
-                                        return true;
-                                    }
-                                }
                             }
                         }
                     }
                     else
-                    {
                         return true;
-                    }
-
                 }
-
             }
-
             next_square();
-
         }
-
         return false;
     }
 
