@@ -28,33 +28,18 @@ import javafx.stage.FileChooser;
  * This class handles all mouse listening, movement, and gameplay logic.
  * @author Kevin Moy**/
 class Board {
-    boolean deep_going = false; //For engine.
+    boolean deep_going = false; //Implement engine later on.
     Stage s = new Stage();
     Game g = null;
     private ListView<String> list = new ListView<>();
     int fullmove_number;
     int turnToMove;
 
-    private String[] engine_list = new String[BasicFile.MAX_LINES];
     private FileChooser f = new FileChooser();
     private boolean trueBoard; //Board that GUI shows.
-    private String uci_engine_path = "";
-    private boolean engine_intro = true;
-
-    private Button engine_go_button;
-    private Button engine_stop_button;
-    private Button engine_make_button;
 
     ////////////////////////////////////////////////////////
     // static members
-
-    private Thread engine_read_thread;
-
-    private ProcessBuilder uci_engine_process_builder;
-    private Process uci_engine_process;
-
-    private InputStream engine_in;
-    private OutputStream engine_out;
 
     //Constants indicating white's turn and black's turn.
     final static int WTURN = 1;
@@ -128,26 +113,16 @@ class Board {
 
     private Color board_color;
     private Color piece_color;
-    private Color engine_color;
     private int color_r;
     private int color_g;
     private int color_b;
     private Color score_color;
-    private Font engine_font = new Font("Courier New",12);
     ////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////
     // uci out
-    private int depth;
-    private String pv;
-    private String bestmove_algeb;
-    Move bestmove;
     Move makemove = new Move();
-    private int score_cp;
-    private int score_mate;
-    private String score_verbal;
     public int score_numerical;
-    private boolean engine_running;
     ////////////////////////////////////////////////////////
 
 
@@ -1377,7 +1352,6 @@ class Board {
             make_move(m);
             g.add_move(san, getFEN());
         }
-        bestmove_algeb = "";
         drawBoard();
     }
 
@@ -1484,56 +1458,11 @@ class Board {
         //Reset position.
         if(trueBoard) {
             is_drag_going = false;
-            bestmove_algeb = "";
             drawBoard();
             reset_game();
         }
     }
 
-//    public void stop_engine_process() {
-//        engine_go_button.setDisable(true);
-//        engine_stop_button.setDisable(true);
-//        engine_make_button.setDisable(true);
-//        if(!(uci_engine_path.equals(""))) {
-//            engine_read_thread.interrupt();
-//            uci_engine_process.destroy();
-//            uci_engine_path="";
-//        }
-//    }
-
-//    private void issue_command(String command) {
-//        try {
-//            engine_out.write(command.getBytes());
-//            engine_out.flush();
-//        }
-//        catch(IOException ex) {}
-//    }
-
-//
-//    public void go_infinite() {
-//        engine_intro=false;
-//        String fen= getFEN();
-//        issue_command("position fen "+fen+"\ngo infinite\n");
-//        engine_running=true;
-//    }
-
-//    public void stop_engine() {
-//        if(engine_running) {
-//            issue_command("stop\n");
-//            while(engine_running){
-//                try {
-//                    Thread.sleep(100);
-//                }
-//                catch(InterruptedException ex) {
-//                    Thread.currentThread().interrupt();
-//                }
-//                // record eval
-//                bestmove.from_algeb(bestmove_algeb);
-//                String bestmove_san=to_san(bestmove);
-//                //g.record_eval(report_fen(),bestmove_san,score_numerical);
-//            }
-//        }
-//    }
     /** Convert standard algebraic notation to a move on the chess board.**/
     public Move san_to_move(String san) {
         Move m = new Move();
