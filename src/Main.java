@@ -24,7 +24,7 @@ public class Main extends Application {
         }
         catch(Exception e) {}
 
-        Board.init_class();
+        Board.initializeClass();
         System.out.println("ChessDB-Remastered Initialized");
 
         primaryStage.setTitle("ChessDB-Remastered");

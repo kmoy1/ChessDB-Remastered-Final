@@ -22,7 +22,7 @@ e4
 	is_analyzed
 	false
 	count
-	39
+	57
 	notation
 	6
 e3

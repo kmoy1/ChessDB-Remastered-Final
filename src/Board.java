@@ -1,5 +1,4 @@
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Hashtable;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.Group;
@@ -11,7 +10,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextArea;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
@@ -45,8 +44,8 @@ class Board {
     final static int WTURN = 1;
     final static int BTURN = -1;
 
-    private static Hashtable translit_light;
-    private static Hashtable translit_dark;
+    private static Hashtable lightSquareMap;
+    private static Hashtable darkSquareMap;
 
     private static InputStream fontStream = Main.class.getResourceAsStream("resources/fonts/MERIFONTNEW.TTF");
     private static Font pieceFont;
@@ -56,27 +55,25 @@ class Board {
     private String ep_square_algeb;
     private int halfmove_clock;
     private String rep;
-    private char[][] board = new char[8][8];
-    private char[][] fonts = new char[8][8];
+    private char[][] board = new char[8][8]; //NOTE: This 2D array is indexed by (RANK, FILE). Contains information about pieces.
+    private char[][] fonts = new char[8][8]; //indexed by (FILE, RANK). Contains information about square color as well as piece.
 
     public boolean flip;
     ////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////
     // For piece drag/drop.
-    private boolean is_drag_going;
+    private boolean mouseDragging;
     private char drag_piece;
-    private char orig_drag_piece;
     private char orig_piece;
     private char orig_empty;
-    private int drag_from_i;
-    private int drag_from_j;
-    private int drag_to_i;
-    private int drag_to_j;
-    private int drag_to_x;
-    private int drag_to_y;
-    private int drag_from_x;
-    private int drag_from_y;
+    private int pieceSourceX;
+    private int pieceSourceY;
+    //Destination of piece coordinates, top left origin (a8 = (0,0))
+    private int pieceDestX;
+    private int pieceDestY;
+    private int piecePixelSourceX;
+    private int piecePixelSourceY;
     private int drag_dx;
     private int drag_dy;
     ////////////////////////////////////////////////////////
@@ -91,18 +88,14 @@ class Board {
     private HBox controls_box = new HBox(2);
 
     private TextField fen_text = new TextField();
-    private TextField san_text = new TextField();
-    private TextArea legal_move_list = new TextArea();
 
     private Canvas canvas;
     private Canvas highlight_canvas;
     private Canvas upper_canvas;
-    private Canvas engine_canvas;
 
     private GraphicsContext gc;
     private GraphicsContext highlight_gc;
     private GraphicsContext upper_gc;
-    private GraphicsContext engine_gc;
 
     private static int padding;
     private static int piece_size;
@@ -113,15 +106,11 @@ class Board {
 
     private Color board_color;
     private Color piece_color;
-    private int color_r;
-    private int color_g;
-    private int color_b;
-    private Color score_color;
     ////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////
     // uci out
-    Move makemove = new Move();
+    Move currentMove = new Move();
     public int score_numerical;
     ////////////////////////////////////////////////////////
 
@@ -184,11 +173,9 @@ class Board {
             canvas = new Canvas(board_size,board_size + info_bar_size);
             highlight_canvas = new Canvas(board_size, board_size);
             upper_canvas = new Canvas(board_size, board_size);
-            engine_canvas = new Canvas(board_size, board_size);
 
             canvas_group.getChildren().add(canvas);
             canvas_group.getChildren().add(highlight_canvas);
-            canvas_group.getChildren().add(engine_canvas);
             canvas_group.getChildren().add(upper_canvas);
 
             Button flip_button = new Button();
@@ -197,7 +184,7 @@ class Board {
 
             Button set_fen_button = new Button();
             set_fen_button.setText("Generate FEN");
-            set_fen_button.setOnAction(e -> set_from_fen(fen_text.getText()));
+            set_fen_button.setOnAction(e -> setFromFEN(fen_text.getText()));
 
             Button report_fen_button = new Button();
             report_fen_button.setText("Load From FEN");
@@ -210,7 +197,7 @@ class Board {
             Button delete_button = new Button();
             delete_button.setText("Take Back Move");
             delete_button.setOnAction(e -> {
-                set_from_fen_inner(g.takeback(),false);
+                fenHelper(g.takeback(),false);
                 make_move_show(null);
             });
 
@@ -248,13 +235,13 @@ class Board {
             vertical_box.getChildren().add(controls_box);
 
             main_box.getChildren().add(vertical_box);
-
+            //Set mouse handler for board.
             upper_canvas.setOnMouseDragged(mouseHandler);
             upper_canvas.setOnMouseClicked(mouseHandler);
             upper_canvas.setOnMouseReleased(mouseHandler);
 
             gc = canvas.getGraphicsContext2D();
-            //Set 2-square highlighting graphics context for highlighting before square + after square
+            //Set 2-square highlighting for before square + after square
             //after making a move.
             highlight_gc = highlight_canvas.getGraphicsContext2D();
             highlight_canvas.setOpacity(0.2);
@@ -262,11 +249,86 @@ class Board {
 
             upper_gc = upper_canvas.getGraphicsContext2D();
 
-            board_color = Color.rgb(67,70,75);
+            board_color = Color.rgb(255,255,255);
             piece_color = Color.rgb(0, 0, 0);
         }
         reset();
     }
+
+    private EventHandler<MouseEvent> mouseHandler = new EventHandler<>() {
+        @Override
+        public void handle(MouseEvent mouseEvent) {
+            //Grab coordinates of mouse event, poll-based
+            int x = (int) mouseEvent.getX();
+            int y = (int) mouseEvent.getY();
+            String type = mouseEvent.getEventType().toString();
+            //Possible types: MOUSE_RELEASED, MOUSE_DRAGGED, MOUSE_CLICKED
+            if (type.equals("MOUSE_RELEASED")) { //Move finished.
+                if (mouseDragging) {
+                    upper_gc.clearRect(0, 0, board_size, board_size);
+                    mouseDragging = false;
+                    pieceDestX = pb_x(x);
+                    pieceDestY = pb_y(y);
+                    // same square
+                    if ((pieceDestX == pieceSourceX) && (pieceDestY == pieceSourceY)) {
+                        drawBoard();
+                        return;
+                    }
+
+                    // wrong turn
+                    if (turn_of(orig_piece) != turnToMove) {
+                        drawBoard();
+                        return;
+                    }
+                    //inbounds move
+                    if ((pieceDestX >= 0) && (pieceDestY >= 0) && (pieceDestX <= 7) && (pieceDestY <= 7)) {
+                        //Set Move and test legality.
+                        currentMove.i1 = pieceSourceX;
+                        currentMove.j1 = pieceSourceY;
+                        currentMove.i2 = pieceDestX;
+                        currentMove.j2 = pieceDestY;
+                        currentMove.prom_piece = ' ';
+
+                        if (is_move_legal(currentMove)) {
+                            make_move_show(currentMove);
+                        }
+                        else {
+                            //System.out.println("Illegal move!");
+                            drawBoard();
+                            return;
+                        }
+
+                    }
+                    else {
+                        drawBoard();
+                        return;
+                    }
+
+                }
+
+            }
+
+            if (type.equals("MOUSE_DRAGGED")) {
+                if (mouseDragging) {
+                    upper_gc.clearRect(0, 0, board_size, board_size);//Toggle to have lit dragging effect.
+                    put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
+                }
+                else {
+                    mouseDragging = true;
+                    pieceSourceX = pb_x(x);
+                    pieceSourceY = pb_y(y);
+                    piecePixelSourceX = bp_x(pieceSourceX);
+                    piecePixelSourceY = bp_y(pieceSourceY);
+                    drag_dx = piecePixelSourceX - x;
+                    drag_dy = piecePixelSourceY - y;
+                    orig_piece = board[pieceSourceX][pieceSourceY];
+                    drag_piece = (char) lightSquareMap.get(orig_piece);
+                    orig_empty = darkSquare(pieceSourceX, pieceSourceY)? '+' : ' ';
+                    put_piece_xy(gc, piecePixelSourceX, piecePixelSourceY, orig_empty);
+                }
+            }
+        }
+    };
 
     private void init_move_generator() {
         curr_i = -1;
@@ -287,7 +349,7 @@ class Board {
             }
             else {
                 char gen_piece = board[curr_i][curr_j];
-                stop=((gen_piece != ' ') && (turn_of(gen_piece) == turnToMove));
+                stop = ((gen_piece != ' ') && (turn_of(gen_piece) == turnToMove));
             }
         }
         while(!stop);
@@ -468,10 +530,10 @@ class Board {
         return false;
     }
 
-    public static void init_class() {
+    public static void initializeClass() {
         //Set dimensions for board GUI
         piece_size = 52;
-        padding = 7; //TODO: Fix this to fit an IOS-sized window.
+        padding = 7;
         margin = 10;
         font_size = 15;
         board_size = (piece_size + padding) * 8 + (2 * margin);
@@ -479,105 +541,45 @@ class Board {
         // Create maps to white and black pieces.
         mapWhite();
         mapBlack();
-
-        //For this given position, create all possible move descriptors, i.e. all possible moves, disregarding turn.
-        int move_table_curr_ptr = 0;
-        for(int x = 0; x < 8; x++) {
-            for(int y = 0; y < 8; y++) {
-                //6-bit piece encoding goes up to 2^5 - 1 = 63.
-                for(int p = 0; p < 64; p++) {
-                    int piece_type = p & PIECE_TYPE;
-                    int piece_color = p & PIECE_COLOR;
-                    if(isPiece(piece_type)) {
-                        boolean is_single = ((piece_type & SINGLE) != 0);
-                        move_table_ptr[x][y][p] = move_table_curr_ptr;
-                        //NOTE: top left corner is (0,0), so Black's back rank is 0 and White's is 7.
-                        //Left column is 0, right column is 7.
-                        for(int dx = -2; dx <= 2; dx++) {
-                            for(int dy = -2; dy <= 2; dy++) {
-                                boolean is_castling = isCastlingHelper(p,x,y,dx,dy);
-                                if (moves(dx,dy) && ((is_castling) || diagPieceMoved(piece_type, dx, dy)
-                                        || straightPieceMoved(piece_type, dx, dy)
-                                        || knightMoved(piece_type, dx, dy)
-                                        || pawnCaptures(piece_type, piece_color, x, y, dx, dy)))
-                                {
-                                    int start_vector = move_table_curr_ptr;
-                                    int possible_dest_x = x;
-                                    int possible_dest_y = y;
-                                    boolean square_ok;
-                                    do {
-                                        possible_dest_x += dx;
-                                        possible_dest_y += dy;
-                                        square_ok = inbounds(possible_dest_x, possible_dest_y);
-                                        if(square_ok) {
-                                            if(isPromotionMove(p, possible_dest_x, possible_dest_y)) {
-                                                for(int prom = 0; prom < promotion_pieces.length; prom++) {
-                                                    MoveDescriptor md = new MoveDescriptor();
-                                                    md.to_i=possible_dest_x;
-                                                    md.to_j=possible_dest_y;
-                                                    md.castling=false;
-                                                    md.promotion=true;
-                                                    md.prom_piece=promotion_pieces[prom];
-                                                    move_table[move_table_curr_ptr++]=md;
-                                                }
-                                            }
-                                            else {
-                                                MoveDescriptor md = new MoveDescriptor();
-                                                md.to_i = possible_dest_x;
-                                                md.to_j = possible_dest_y;
-                                                md.castling = is_castling;
-                                                move_table[move_table_curr_ptr++]=md;
-                                            }
-                                        }
-                                    }while(square_ok && (!is_single));
-
-                                    for (int ptr = start_vector; ptr < move_table_curr_ptr; ptr++) {
-                                        move_table[ptr].next_vector = move_table_curr_ptr;
-                                    }
-                                }
-                            }
-                        }
-                        //Update move table.
-                        move_table[move_table_curr_ptr] = new MoveDescriptor();
-                        move_table[move_table_curr_ptr++].end_piece = true;
-                    }
-                }
-            }
-        }
+        initializeMoveTablePtr();
     }
 
+
+    /** Populate dark square hashtable, mapping pieces on dark squares to suitable font.**/
     private static void mapBlack() {
-        translit_dark = new Hashtable();
-        translit_dark.put(' ','+');
-        translit_dark.put('P','P');
-        translit_dark.put('N','N');
-        translit_dark.put('B','B');
-        translit_dark.put('R','R');
-        translit_dark.put('Q','Q');
-        translit_dark.put('K','K');
-        translit_dark.put('p','O');
-        translit_dark.put('n','M');
-        translit_dark.put('b','V');
-        translit_dark.put('r','T');
-        translit_dark.put('q','W');
-        translit_dark.put('k','L');
+        darkSquareMap = new Hashtable();
+        darkSquareMap.put(' ','+');
+        darkSquareMap.put('P','P');
+        darkSquareMap.put('N','N');
+        darkSquareMap.put('B','B');
+        darkSquareMap.put('R','R');
+        darkSquareMap.put('Q','Q');
+        darkSquareMap.put('K','K');
+        //Ran out of letters so put some random shit here.
+        darkSquareMap.put('p','O');
+        darkSquareMap.put('n','M');
+        darkSquareMap.put('b','V');
+        darkSquareMap.put('r','T');
+        darkSquareMap.put('q','W');
+        darkSquareMap.put('k','L');
     }
 
+    /** Populate light square hashtable, mapping pieces on light squares to suitable font. **/
     private static void mapWhite() {
-        translit_light = new Hashtable();
-        translit_light.put(' ',' ');
-        translit_light.put('P','p');
-        translit_light.put('N','n');
-        translit_light.put('B','b');
-        translit_light.put('R','r');
-        translit_light.put('Q','q');
-        translit_light.put('K','k');
-        translit_light.put('p','o');
-        translit_light.put('n','m');
-        translit_light.put('b','v');
-        translit_light.put('r','t');
-        translit_light.put('q','w');
-        translit_light.put('k','l');
+        lightSquareMap = new Hashtable();
+        lightSquareMap.put(' ',' ');
+        lightSquareMap.put('P','p');
+        lightSquareMap.put('N','n');
+        lightSquareMap.put('B','b');
+        lightSquareMap.put('R','r');
+        lightSquareMap.put('Q','q');
+        lightSquareMap.put('K','k');
+        lightSquareMap.put('p','o');
+        lightSquareMap.put('n','m');
+        lightSquareMap.put('b','v');
+        lightSquareMap.put('r','t');
+        lightSquareMap.put('q','w');
+        lightSquareMap.put('k','l');
     }
 
     /** Return true if cartesian coordinate (x,y) is a valid coordinate
@@ -653,18 +655,17 @@ class Board {
 
     /**Helper function to populate fonts array (for pieces and squares)
      * based on current position.*/
-    private char[][] populateFonts(char[][] board) {
+    private void populateFonts(char[][] board) {
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
                 if (darkSquare(i,j)) {
-                    fonts[i][j] = (char) translit_dark.get(board[i][j]);
+                    fonts[i][j] = (char) darkSquareMap.get(board[i][j]);
                 }
                 else {
-                    fonts[i][j] = (char) translit_light.get(board[i][j]);
+                    fonts[i][j] = (char) lightSquareMap.get(board[i][j]);
                 }
             }
         }
-        return fonts;
     }
 
     /** Return if square at (i,j) is a dark square or not
@@ -717,13 +718,13 @@ class Board {
         return(flip?(7-j):j);
     }
 
-    /** Place piece onto (x,y) pixel location on graphicsContext SELECT_GC.
+    /** Place piece onto (x,y) pixel location on graphicsContext SELECT_GC (Should only be board).
      * This method ensures pieces actually show up as an image from the TTF file,
      * rather than a character. Additionally, handles maintaining
      * coloration of squares AFTER move (original square and dest square).*/
     private void put_piece_xy(GraphicsContext select_gc, int x, int y, char piece) {
         if(select_gc == gc) {
-            //Ensures square where piece moved from remains colored.
+            //Ensure source square remains same color as before.
             select_gc.setFill(board_color);
             //Ensure piece is removed from original square upon movement.
             select_gc.fillRect(x, y, piece_size + padding, piece_size + padding);
@@ -734,9 +735,10 @@ class Board {
     }
 
     public void drawBoard() {
-        if(deep_going) return;
-
+//        if(deep_going)
+//            return;
         populateFonts(board);
+//        System.out.println(Arrays.deepToString(fonts));
         gc.setFont(pieceFont);
         gc.setFill(board_color);
         gc.fillRect(0, 0, board_size, board_size);
@@ -753,7 +755,7 @@ class Board {
         }
 
         gc.setFont(Font.font("Courier New",font_size));
-        String gc_text = " t: "+(turnToMove ==1?"w":"b")+
+        String gc_text = " t: "+(turnToMove ==1? "w" : "b")+
                 ", c: "+castling_rights+
                 ", ep: "+ep_square_algeb+
                 ", hm: "+halfmove_clock+
@@ -771,17 +773,17 @@ class Board {
         rep = "";
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
-                rep+=board[j][i];
+                rep += board[j][i];
             }
         }
         return rep;
     }
 
-    public boolean set_from_fen(String fen) {
-        return set_from_fen_inner(fen,true);
+    public boolean setFromFEN(String fen) {
+        return fenHelper(fen,true);
     }
 
-    public boolean set_from_fen_inner(String fen,boolean do_reset_game) {
+    public boolean fenHelper(String fen, boolean resetGame) {
         rep = "";
         String[] fen_parts = fen.split(" ");
         fen = fen_parts[0];
@@ -845,7 +847,7 @@ class Board {
 
         if((trueBoard) && (!deep_going)) {
             drawBoard();
-            if(do_reset_game) {
+            if(resetGame) {
                 reset_game();
             }
         }
@@ -1174,9 +1176,9 @@ class Board {
         String legal_move_list_as_string;
         legal_move_list_buffer_cnt = 0;
         while(next_pseudo_legal_move()) {
-            String algeb = current_move.to_algeb();
+            String algeb = current_move.toAlgebraic();
             Board dummy=new Board(false);
-            dummy.set_from_fen(getFEN());
+            dummy.setFromFEN(getFEN());
             dummy.make_move(current_move);
             if(!dummy.is_in_check(turnToMove)) {
                 String san = to_san(current_move);
@@ -1198,13 +1200,13 @@ class Board {
     /** Check if Move is legal given current board position**/
     private boolean is_move_legal(Move m) {
         boolean is_legal = false;
-        String algeb = m.to_algeb_inner(false);
+        String algeb = m.algebraicHelper(false);
         init_move_generator();
         while((!is_legal)&&(next_pseudo_legal_move())) {
-            String test_algeb = current_move.to_algeb_inner(false);
+            String test_algeb = current_move.algebraicHelper(false);
             if(test_algeb.equals(algeb)) {
                 Board dummy = new Board(false);
-                dummy.set_from_fen(getFEN());
+                dummy.setFromFEN(getFEN());
                 dummy.make_move(current_move);
                 if(!dummy.is_in_check(turnToMove)) {
                     is_legal = true;
@@ -1218,7 +1220,7 @@ class Board {
         char from_piece = board[m.i1][m.j1];
         int from_piece_code = code_of(from_piece);
         int from_piece_type = from_piece_code & PIECE_TYPE;
-        String algeb = m.to_algeb();
+        String algeb = m.toAlgebraic();
         if(from_piece_type==KING) {
             if(algeb.equals("e1g1")){return "O-O";}
             if(algeb.equals("e8g8")){return "O-O";}
@@ -1264,7 +1266,7 @@ class Board {
                         test_move.i2 = m.i2;
                         test_move.j2 = m.j2;
                         Board dummy = new Board(false);
-                        dummy.set_from_fen(getFEN());
+                        dummy.setFromFEN(getFEN());
                         dummy.make_move(test_move);
                         if(!dummy.is_in_check(turnToMove)) {
                             ambiguity = true;
@@ -1317,14 +1319,14 @@ class Board {
             raw += "=" + Character.toUpperCase(m.prom_piece);
 
         Board dummy = new Board(false);
-        dummy.set_from_fen(getFEN());
+        dummy.setFromFEN(getFEN());
         dummy.make_move(m);
         boolean is_check = dummy.is_in_check(dummy.turnToMove);
         dummy.init_move_generator();
         boolean has_legal = false;
         while((dummy.next_pseudo_legal_move())&&(!has_legal)) {
             Board dummy2 = new Board(false);
-            dummy2.set_from_fen(dummy.getFEN());
+            dummy2.setFromFEN(dummy.getFEN());
             dummy2.make_move(dummy.current_move);
             if(!dummy2.is_in_check(dummy.turnToMove)) {
                 has_legal = true;
@@ -1369,82 +1371,6 @@ class Board {
         return WHITE;
     }
 
-    private EventHandler<MouseEvent> mouseHandler = new EventHandler<>() {
-        @Override
-        public void handle(MouseEvent mouseEvent) {
-            int x = (int) mouseEvent.getX();
-            int y = (int) mouseEvent.getY();
-            String type = mouseEvent.getEventType().toString();
-            if (type.equals("MOUSE_RELEASED")) {
-
-                if (is_drag_going) {
-                    upper_gc.clearRect(0, 0, board_size, board_size);
-                    is_drag_going = false;
-                    drag_to_i = pb_x(x);
-                    drag_to_j = pb_x(y);
-                    // same square
-                    if ((drag_to_i == drag_from_i) && (drag_to_j == drag_from_j)) {
-                        drawBoard();
-                        return;
-                    }
-
-                    // wrong turn
-                    if (turn_of(orig_piece) != turnToMove) {
-                        drawBoard();
-                        return;
-                    }
-
-                    if ((drag_to_i >= 0) && (drag_to_j >= 0) && (drag_to_i <= 7) && (drag_to_j <= 7)) {
-                        drag_to_x = bp_x(drag_to_i);
-                        drag_to_y = bp_y(drag_to_j);
-
-                        makemove.i1 = drag_from_i;
-                        makemove.j1 = drag_from_j;
-                        makemove.i2 = drag_to_i;
-                        makemove.j2 = drag_to_j;
-                        makemove.prom_piece = ' ';
-
-                        if (is_move_legal(makemove)) {
-                            make_move_show(makemove);
-                        }
-                        else {
-                            //System.out.println("Illegal move!");
-                            drawBoard();
-                            return;
-                        }
-
-                    }
-                    else {
-                        drawBoard();
-                        return;
-                    }
-
-                }
-
-            }
-
-            if (type.equals("MOUSE_DRAGGED")) {
-                if (is_drag_going) {
-                    upper_gc.clearRect(0, 0, board_size, board_size);
-                    put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
-                }
-                else {
-                    is_drag_going = true;
-                    drag_from_i = pb_x(x);
-                    drag_from_j = pb_y(y);
-                    drag_from_x = bp_x(drag_from_i);
-                    drag_from_y = bp_y(drag_from_j);
-                    drag_dx = drag_from_x - x;
-                    drag_dy = drag_from_y - y;
-                    orig_drag_piece = fonts[drag_from_i][drag_from_j];
-                    orig_piece = board[drag_from_i][drag_from_j];
-                    drag_piece = (char) translit_light.get(orig_piece);
-                    orig_empty = darkSquare(drag_from_i, drag_from_j) ? '+' : ' ';
-                    put_piece_xy(gc, drag_from_x, drag_from_y, orig_empty);
-                }
-            }
-        }
-    };
 
     public void reset() {
         //Set relevant FEN information.
@@ -1457,7 +1383,7 @@ class Board {
         turnToMove = WTURN;
         //Reset position.
         if(trueBoard) {
-            is_drag_going = false;
+            mouseDragging = false;
             drawBoard();
             reset_game();
         }
@@ -1615,7 +1541,7 @@ class Board {
                                 m.j1 = md.to_j;
                                 // check for check
                                 Board dummy_check_test = new Board(false);
-                                dummy_check_test.set_from_fen(getFEN());
+                                dummy_check_test.setFromFEN(getFEN());
                                 dummy_check_test.make_move(m);
                                 if(dummy_check_test.is_in_check(turnToMove)) {
                                     found = false;
@@ -1671,5 +1597,72 @@ class Board {
         int size = piece_size - 4;
         highlight_gc.fillRoundRect(bp_x(m.i1) + 2, bp_y(m.j1) + 5,size, size, arc, arc);
         highlight_gc.fillRoundRect(bp_x(m.i2) + 2, bp_y(m.j2) + 5, size, size, arc, arc);
+    }
+
+    private static void initializeMoveTablePtr(){
+        int move_table_curr_ptr = 0;
+        //For this given position, create all possible move descriptors, i.e. all possible moves, disregarding turn.
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                //6-bit piece encoding goes up to 2^5 - 1 = 63.
+                for(int p = 0; p < 64; p++) {
+                    int piece_type = p & PIECE_TYPE;
+                    int piece_color = p & PIECE_COLOR;
+                    if(isPiece(piece_type)) {
+                        boolean is_single = ((piece_type & SINGLE) != 0);
+                        move_table_ptr[x][y][p] = move_table_curr_ptr;
+                        //NOTE: top left corner is (0,0), so Black's back rank is 0 and White's is 7.
+                        //Left column is 0, right column is 7.
+                        for(int dx = -2; dx <= 2; dx++) {
+                            for(int dy = -2; dy <= 2; dy++) {
+                                boolean is_castling = isCastlingHelper(p,x,y,dx,dy);
+                                if (moves(dx,dy) && ((is_castling) || diagPieceMoved(piece_type, dx, dy)
+                                        || straightPieceMoved(piece_type, dx, dy)
+                                        || knightMoved(piece_type, dx, dy)
+                                        || pawnCaptures(piece_type, piece_color, x, y, dx, dy)))
+                                {
+                                    int start_vector = move_table_curr_ptr;
+                                    int possible_dest_x = x;
+                                    int possible_dest_y = y;
+                                    boolean square_ok;
+                                    do {
+                                        possible_dest_x += dx;
+                                        possible_dest_y += dy;
+                                        square_ok = inbounds(possible_dest_x, possible_dest_y);
+                                        if(square_ok) {
+                                            if(isPromotionMove(p, possible_dest_x, possible_dest_y)) {
+                                                for(int prom = 0; prom < promotion_pieces.length; prom++) {
+                                                    MoveDescriptor md = new MoveDescriptor();
+                                                    md.to_i = possible_dest_x;
+                                                    md.to_j = possible_dest_y;
+                                                    md.castling = false;
+                                                    md.promotion = true;
+                                                    md.prom_piece = promotion_pieces[prom];
+                                                    move_table[move_table_curr_ptr++] = md;
+                                                }
+                                            }
+                                            else {
+                                                MoveDescriptor md = new MoveDescriptor();
+                                                md.to_i = possible_dest_x;
+                                                md.to_j = possible_dest_y;
+                                                md.castling = is_castling;
+                                                move_table[move_table_curr_ptr++] = md;
+                                            }
+                                        }
+                                    }while(square_ok && (!is_single));
+
+                                    for (int ptr = start_vector; ptr < move_table_curr_ptr; ptr++) {
+                                        move_table[ptr].next_vector = move_table_curr_ptr;
+                                    }
+                                }
+                            }
+                        }
+                        //Update move table.
+                        move_table[move_table_curr_ptr] = new MoveDescriptor();
+                        move_table[move_table_curr_ptr++].end_piece = true;
+                    }
+                }
+            }
+        }
     }
 }

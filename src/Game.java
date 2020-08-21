@@ -121,7 +121,7 @@ public class Game {
             if(selected > 0)
                 pos = positions[selected - 1];
             game_ptr = selected;
-            this.b.set_from_fen_inner(pos, false);
+            this.b.fenHelper(pos, false);
             update_game();
         });
     }
@@ -182,7 +182,7 @@ public class Game {
         b.setOnAction(e -> {
             String fen = get_content();
             if(fen != null) {
-                this.b.set_from_fen(fen);
+                this.b.setFromFEN(fen);
                 this.b.drawBoard();
             }
         });
@@ -467,7 +467,7 @@ public class Game {
         {
             String fen_before=curr_pos(game_ptr-1);
             Board dummy=new Board(false);
-            dummy.set_from_fen(fen_before);
+            dummy.setFromFEN(fen_before);
             String san=moves[game_ptr-1];
             Move m=dummy.san_to_move(san);
             b.highlight_move(m);
@@ -484,7 +484,7 @@ public class Game {
         String[] game_buffer = new String[MAX_MOVES+1];
         game_buffer[0] = "*";
         Board dummy = new Board(false);
-        dummy.set_from_fen_inner(initial_position,false);
+        dummy.fenHelper(initial_position,false);
         int fullmove_number = dummy.fullmove_number;
         int turn = dummy.turnToMove;
         for(int i = 0; i < move_ptr; i++) {
@@ -515,7 +515,7 @@ public class Game {
             pgn_text.selectRange(0, start_fen_end_index);
         }
         String fen = curr_pos(game_ptr);
-        b.set_from_fen_inner(fen, false);
+        b.fenHelper(fen, false);
         b.make_move_show(null);
         highlight_last_move();
     }
@@ -523,7 +523,7 @@ public class Game {
     /** Return PGN from the move list so far. **/
     public String getPGN() {
         Board dummy = new Board(false);
-        dummy.set_from_fen(initial_position);
+        dummy.setFromFEN(initial_position);
         int fullmove_number = dummy.fullmove_number;
         int turn = dummy.turnToMove;
         pgn="[FEN \"" + initial_position + "\"]\n";
@@ -548,7 +548,7 @@ public class Game {
         }
 
         for(int i = 1; i < move_ptr; i++) {
-            dummy.set_from_fen(positions[i - 1]);
+            dummy.setFromFEN(positions[i - 1]);
             turn = dummy.turnToMove;
             if(dummy.turnToMove == Board.WTURN) {
                 fullmove_number++;
@@ -611,7 +611,7 @@ public class Game {
 
         MyTokenizer t = new MyTokenizer(body);
         String token;
-        b.set_from_fen(initial_position);
+        b.setFromFEN(initial_position);
         Object flip = pgn_header_hash.get("Flip");
         if(flip != null) {
             b.flip = flip.toString().equals("true")? true : false;
@@ -786,13 +786,13 @@ public class Game {
         for(int i = 0; i < deep_legal_move_list_buffer_cnt; i++) {
             Platform.runLater(() -> {
                 deep_san = deep_legal_move_list_buffer[do_deep_i++];
-                b.set_from_fen(fen);
+                b.setFromFEN(fen);
                 b.make_san_move(deep_san, false);
                 //b.go_infinite();
                 try {Thread.sleep(250);}
                 catch(InterruptedException ex) {}
                 //b.stop_engine();
-                b.set_from_fen(fen);
+                b.setFromFEN(fen);
                 record_eval(fen,deep_san,-b.score_numerical);
             });
 

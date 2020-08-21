@@ -13,19 +13,18 @@ public class Move {
         prom_piece = ' ';
     }
 
-    public static String ij_to_algeb(int i,int j) {
+    public static String ij_to_algeb(int i, int j) {
         String algeb = "";
         algeb += (char)(i + (int)'a');
         algeb += (char) ((7 - j) + (int)'1');
         return algeb;
     }
 
-    public String to_algeb()
-    {
-        return to_algeb_inner(true);
+    public String toAlgebraic() {
+        return algebraicHelper(true);
     }
 
-    public String to_algeb_inner(Boolean full) {
+    public String algebraicHelper(boolean full) {
         String algeb = "";
         algeb += ij_to_algeb(i1,j1);
         algeb += ij_to_algeb(i2,j2);
