@@ -13,7 +13,7 @@ e5
 	is_analyzed
 	false
 	count
-	25
+	29
 	notation
 	-1
 f6

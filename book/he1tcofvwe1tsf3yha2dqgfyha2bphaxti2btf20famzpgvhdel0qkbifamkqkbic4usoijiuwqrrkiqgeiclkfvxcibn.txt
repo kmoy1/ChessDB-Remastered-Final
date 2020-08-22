@@ -3,16 +3,16 @@ Nf6
 	0
 	is_analyzed
 	false
-	count
-	2
 	notation
 	-1
+	count
+	2
 Nc6
 	eval
 	0
 	is_analyzed
 	false
 	count
-	4
+	5
 	notation
 	-1

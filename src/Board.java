@@ -170,7 +170,7 @@ class Board {
         if (trueBoard) {
             //Build GUI to display.
             flip = false;
-            canvas = new Canvas(board_size,board_size + info_bar_size);
+            canvas = new Canvas(board_size, board_size);
             highlight_canvas = new Canvas(board_size, board_size);
             upper_canvas = new Canvas(board_size, board_size);
 
@@ -263,20 +263,33 @@ class Board {
             int y = (int) mouseEvent.getY();
             String type = mouseEvent.getEventType().toString();
             //Possible types: MOUSE_RELEASED, MOUSE_DRAGGED, MOUSE_CLICKED
+            if (type.equals("MOUSE_DRAGGED")) {
+                if (mouseDragging) {
+                    upper_gc.clearRect(0, 0, board_size, board_size);//Toggle to have lit dragging effect.
+                    put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
+                }
+                else {
+                    mouseDragging = true;
+                    pieceSourceX = pb_x(x);
+                    pieceSourceY = pb_y(y);
+                    piecePixelSourceX = bp_x(pieceSourceX);
+                    piecePixelSourceY = bp_y(pieceSourceY);
+                    drag_dx = piecePixelSourceX - x;
+                    drag_dy = piecePixelSourceY - y;
+                    orig_piece = board[pieceSourceX][pieceSourceY];
+                    drag_piece = (char) lightSquareMap.get(orig_piece);
+                    orig_empty = darkSquare(pieceSourceX, pieceSourceY)? '+' : ' ';
+                    put_piece_xy(gc, piecePixelSourceX, piecePixelSourceY, orig_empty);
+                }
+            }
             if (type.equals("MOUSE_RELEASED")) { //Move finished.
                 if (mouseDragging) {
                     upper_gc.clearRect(0, 0, board_size, board_size);
                     mouseDragging = false;
                     pieceDestX = pb_x(x);
                     pieceDestY = pb_y(y);
-                    // same square
-                    if ((pieceDestX == pieceSourceX) && (pieceDestY == pieceSourceY)) {
-                        drawBoard();
-                        return;
-                    }
-
-                    // wrong turn
-                    if (turn_of(orig_piece) != turnToMove) {
+                    // same square or wrong turn (trying to move a white piece when black's turn).
+                    if (((pieceDestX == pieceSourceX) && (pieceDestY == pieceSourceY)) || (turn_of(orig_piece) != turnToMove)) {
                         drawBoard();
                         return;
                     }
@@ -297,34 +310,12 @@ class Board {
                             drawBoard();
                             return;
                         }
-
                     }
+                    //Reset board if (accidentally) moving piece off screen.
                     else {
                         drawBoard();
                         return;
                     }
-
-                }
-
-            }
-
-            if (type.equals("MOUSE_DRAGGED")) {
-                if (mouseDragging) {
-                    upper_gc.clearRect(0, 0, board_size, board_size);//Toggle to have lit dragging effect.
-                    put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
-                }
-                else {
-                    mouseDragging = true;
-                    pieceSourceX = pb_x(x);
-                    pieceSourceY = pb_y(y);
-                    piecePixelSourceX = bp_x(pieceSourceX);
-                    piecePixelSourceY = bp_y(pieceSourceY);
-                    drag_dx = piecePixelSourceX - x;
-                    drag_dy = piecePixelSourceY - y;
-                    orig_piece = board[pieceSourceX][pieceSourceY];
-                    drag_piece = (char) lightSquareMap.get(orig_piece);
-                    orig_empty = darkSquare(pieceSourceX, pieceSourceY)? '+' : ' ';
-                    put_piece_xy(gc, piecePixelSourceX, piecePixelSourceY, orig_empty);
                 }
             }
         }
@@ -383,9 +374,9 @@ class Board {
                     move_gen_curr_ptr++;
                     if((curr_j == 0) && (to_i == 6)) {
                         // black kingside
-                        if((board[6][0] == ' ') && (board[5][0]==' ')
+                        if((board[6][0] == ' ') && (board[5][0] == ' ')
                                 &&
-                                (castling_rights.indexOf('k')>=0)
+                                (castling_rights.indexOf('k') >= 0)
                                 &&
                                 (!checkHelper(4, 0, BLACK))
                                 &&
@@ -706,13 +697,13 @@ class Board {
         return margin + offset * (piece_size + padding);
     }
 
-    /** Converts pixel (screen) x-coordinate to corresponding board location. */
+    /** Converts pixel (screen) x-coordinate to corresponding board (file) coordinate (0-7). */
     private int pb_x(int x) {
         int i = (x - margin) / (piece_size + padding);
         return flip? (7-i) : i;
     }
 
-    /** Converts pixel (screen) x-coordinate to corresponding board location. */
+    /** Converts pixel (screen) x-coordinate to corresponding board (rank) coordinate. (0-7) */
     private int pb_y(int y) {
         int j = (y - margin) / (piece_size + padding);
         return(flip?(7-j):j);
@@ -754,7 +745,7 @@ class Board {
             }
         }
 
-        gc.setFont(Font.font("Courier New",font_size));
+        gc.setFont(Font.font("Courier New", font_size));
         String gc_text = " t: "+(turnToMove ==1? "w" : "b")+
                 ", c: "+castling_rights+
                 ", ep: "+ep_square_algeb+
@@ -867,9 +858,8 @@ class Board {
             for(int i = 0; i < 8; i++) {
                 int index = i + j * 8;
                 char current = rep.charAt(index);
-                if(current == ' ') {
+                if(current == ' ')
                     empty_cnt++;
-                }
                 else {
                     if(empty_cnt > 0) {
                         fen += empty_cnt;
@@ -1092,7 +1082,7 @@ class Board {
 
     private boolean checkHelper(int i, int j, int color) {
         int attacker_color = color == WHITE? BLACK:WHITE;
-        boolean is_check=false;
+        boolean is_check = false;
         for(int p = 0; p < all_pieces.length; p++) {
             int piece_code = all_pieces[p];
             int piece_type = piece_code & PIECE_TYPE;
@@ -1348,7 +1338,6 @@ class Board {
     }
 
     public void make_move_show(Move m) {
-        boolean restart = false;
         if(m != null) {
             String san = to_san(m);
             make_move(m);

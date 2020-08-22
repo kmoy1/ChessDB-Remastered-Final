@@ -449,34 +449,25 @@ public class Game {
         }
     }
 
-    private String curr_pos(int ptr)
-    {
-        if(ptr>0)
-        {
+    private String curr_pos(int ptr) {
+        if(ptr > 0)
             return positions[ptr-1];
-        }
         else
-        {
             return initial_position;
-        }
     }
 
-    public void highlight_last_move()
-    {
-        if(game_ptr>0)
-        {
-            String fen_before=curr_pos(game_ptr-1);
-            Board dummy=new Board(false);
+    public void highlight_last_move() {
+        if(game_ptr > 0) {
+            String fen_before = curr_pos(game_ptr - 1);
+            Board dummy = new Board(false);
             dummy.setFromFEN(fen_before);
-            String san=moves[game_ptr-1];
-            Move m=dummy.san_to_move(san);
+            String san = moves[game_ptr-1];
+            Move m = dummy.san_to_move(san);
             b.highlight_move(m);
         }
-        else
-        {
+        else {
             b.highlight_move(null);
         }
-
     }
 
     public void update_game() {
