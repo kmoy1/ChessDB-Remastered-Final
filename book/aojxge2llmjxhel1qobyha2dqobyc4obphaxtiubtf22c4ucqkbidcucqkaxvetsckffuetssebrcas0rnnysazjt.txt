@@ -1,45 +1,54 @@
+d6
+	eval
+	0
+	is_analyzed
+	false
+	count
+	1
+	notation
+	-1
 e6
 	eval
 	0
 	is_analyzed
 	false
-	notation
-	-1
 	count
 	1
+	notation
+	-1
 e5
 	eval
 	0
 	is_analyzed
 	false
-	count
-	30
 	notation
 	-1
+	count
+	30
 f6
 	eval
 	0
 	is_analyzed
 	false
-	notation
-	-1
 	count
 	1
+	notation
+	-1
 f5
 	eval
 	0
 	is_analyzed
 	false
-	count
-	3
 	notation
 	-1
+	count
+	3
 g5
 	eval
 	0
 	is_analyzed
 	false
-	notation
-	-1
 	count
 	1
+	notation
+	-1

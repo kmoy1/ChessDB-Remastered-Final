@@ -302,7 +302,7 @@ class Board {
                         currentMove.j1 = pieceSourceY;
                         currentMove.i2 = pieceDestX;
                         currentMove.j2 = pieceDestY;
-                        currentMove.prom_piece = ' ';
+                        currentMove.promotionPiece = ' ';
 
                         if (is_move_legal(currentMove)) {
                             make_move_show(currentMove);
@@ -374,7 +374,7 @@ class Board {
                 current_move.j1 = testRank;
                 current_move.i2 = to_i;
                 current_move.j2 = to_j;
-                current_move.prom_piece = md.prom_piece;
+                current_move.promotionPiece = md.promotionPiece;
                 if(md.castling) {
                     genMoveInd++;
                     if((testRank == 0) && (to_i == 6)) {
@@ -914,19 +914,19 @@ class Board {
         // promotion
         if( ((m.orig_piece=='P')&&(m.j2==0)) || ((m.orig_piece=='p')&&(m.j2==7)) )
         {
-            if(m.prom_piece != ' ') {
-                if((m.prom_piece>='a')&&(m.prom_piece<='z'))
+            if(m.promotionPiece != ' ') {
+                if((m.promotionPiece >='a')&&(m.promotionPiece <='z'))
                 {
                     if(m.orig_piece=='P')
                     {
-                        m.prom_piece+='A'-'a';
+                        m.promotionPiece +='A'-'a';
                     }
                 }
                 else
                 {
                     if(m.orig_piece=='p')
                     {
-                        m.prom_piece+='a'-'A';
+                        m.promotionPiece +='a'-'A';
                     }
                 }
             }
@@ -950,16 +950,16 @@ class Board {
 
                 switch(n)
                 {
-                    case 0:m.prom_piece=m.orig_piece=='P'?'Q':'q';break;
-                    case 1:m.prom_piece=m.orig_piece=='P'?'R':'r';break;
-                    case 2:m.prom_piece=m.orig_piece=='P'?'B':'b';break;
-                    case 3:m.prom_piece=m.orig_piece=='P'?'N':'n';break;
-                    default:m.prom_piece=' ';
+                    case 0:m.promotionPiece =m.orig_piece=='P'?'Q':'q';break;
+                    case 1:m.promotionPiece =m.orig_piece=='P'?'R':'r';break;
+                    case 2:m.promotionPiece =m.orig_piece=='P'?'B':'b';break;
+                    case 3:m.promotionPiece =m.orig_piece=='P'?'N':'n';break;
+                    default:m.promotionPiece =' ';
                 }
 
             }
 
-            board[m.i2][m.j2]=m.prom_piece;
+            board[m.i2][m.j2]=m.promotionPiece;
 
         }
 
@@ -1257,7 +1257,7 @@ class Board {
                     if((to_piece_test == from_piece) && ((md.to_i != m.i1) || (md.to_j != m.j1))) {
                         Move test_move = new Move();
                         test_move.orig_piece = from_piece;
-                        test_move.prom_piece = ' ';
+                        test_move.promotionPiece = ' ';
                         test_move.i1 = md.to_i;
                         test_move.j1 = md.to_j;
                         test_move.i2 = m.i2;
@@ -1313,8 +1313,8 @@ class Board {
     /** Convert Move M to standard algebraic notation (SAN). **/
     public String moveSAN(Move m) {
         String san = moveSANRaw(m);
-        if(m.prom_piece != ' ')
-            san += "=" + Character.toUpperCase(m.prom_piece);
+        if(m.promotionPiece != ' ')
+            san += "=" + Character.toUpperCase(m.promotionPiece);
 
         Board test = new Board(false);
         test.setFromFEN(getFEN());
@@ -1558,7 +1558,7 @@ class Board {
         if(san.length() > 1) {
             if(san.charAt(0) == '=') {
                 // promotion
-                m.prom_piece = san.charAt(1);
+                m.promotionPiece = san.charAt(1);
             }
         }
         return m;
@@ -1634,7 +1634,7 @@ class Board {
                                                     md.to_j = possible_dest_y;
                                                     md.castling = false;
                                                     md.promotion = true;
-                                                    md.prom_piece = promotion_pieces[prom];
+                                                    md.promotionPiece = promotion_pieces[prom];
                                                     moveTable[move_table_curr_ptr++] = md;
                                                 }
                                             }

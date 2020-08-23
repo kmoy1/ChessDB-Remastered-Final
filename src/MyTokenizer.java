@@ -12,7 +12,8 @@ public class MyTokenizer {
         String c;
         do {
             c = get_char();
-            if(c==null) return;
+            if(c==null)
+                return;
         }while(c.equals(" "));
         content = c + content;
     }

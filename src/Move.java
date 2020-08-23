@@ -2,7 +2,7 @@ public class Move {
     public int i1, j1;
     public int i2, j2;
     char orig_piece;
-    char prom_piece;
+    char promotionPiece;
 
     public Move() {
         i1 = 0;
@@ -10,7 +10,7 @@ public class Move {
         i2 = 0;
         j2 = 0;
         orig_piece = ' ';
-        prom_piece = ' ';
+        promotionPiece = ' ';
     }
 
     public Move(int i1, int j1, int i2, int j2, char orig_piece, char prom_piece){
@@ -19,7 +19,7 @@ public class Move {
         this.i2 = i2;
         this.j2 = j2;
         this.orig_piece = orig_piece;
-        this.prom_piece = prom_piece;
+        this.promotionPiece = prom_piece;
     }
 
     public static String ij_to_algeb(int i, int j) {
@@ -37,8 +37,8 @@ public class Move {
         String algeb = "";
         algeb += ij_to_algeb(i1,j1);
         algeb += ij_to_algeb(i2,j2);
-        if((prom_piece!=' ') && (full)) {
-            algeb += prom_piece;
+        if((promotionPiece !=' ') && (full)) {
+            algeb += promotionPiece;
         }
         return algeb;
     }
@@ -51,10 +51,10 @@ public class Move {
         if (algeb.length() < 4) return;
         i2 = algeb.charAt(2) - 'a';
         j2 = '8' - algeb.charAt(3);
-        prom_piece = ' ';
+        promotionPiece = ' ';
 
         if (algeb.length() >= 5) {
-            prom_piece = algeb.charAt(4);
+            promotionPiece = algeb.charAt(4);
         }
     }
 }
