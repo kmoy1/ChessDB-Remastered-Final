@@ -13,6 +13,15 @@ public class Move {
         prom_piece = ' ';
     }
 
+    public Move(int i1, int j1, int i2, int j2, char orig_piece, char prom_piece){
+        this.i1 = i1;
+        this.j1 = j1;
+        this.i2 = i2;
+        this.j2 = j2;
+        this.orig_piece = orig_piece;
+        this.prom_piece = prom_piece;
+    }
+
     public static String ij_to_algeb(int i, int j) {
         String algeb = "";
         algeb += (char)(i + (int)'a');

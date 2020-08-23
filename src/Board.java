@@ -117,9 +117,8 @@ class Board {
 
     ////////////////////////////////////////////////////////
     // move generation
-    final static int move_table_size = 20000;
-    static MoveDescriptor move_table[] = new MoveDescriptor[move_table_size];
-    static int move_table_ptr[][][] = new int[8][8][64];
+    static MoveDescriptor moveTable[] = new MoveDescriptor[20000];
+    static int mtPtr[][][] = new int[8][8][64];
 
     /* ---- Piece Representation ---- */
     //We use a 6-bit system to inherently give the encoding of a piece (multiple) move capabilities.
@@ -151,15 +150,15 @@ class Board {
     final static int WHITE = 1;
     final static int BLACK = 0;
 
-    private int curr_i = 0;
-    private int curr_j = 0;
+    private int testFile = 0; //Current, y axis
+    private int testRank = 0; //Current, x axis.
 
-    private int move_gen_curr_ptr = 0;
-    private char current_move_gen_piece = ' ';
-    private int current_move_gen_piece_code = 0;
-    private int current_move_gen_piece_type = 0;
-    private boolean is_current_move_gen_piece_sliding = false;
-    private int current_move_gen_piece_color = 0;
+    private int genMoveInd = 0;
+    private char testPiece = ' ';
+    private int testPieceCode = 0;
+    private int testPieceType = 0;
+    private boolean testPieceSlides = false;
+    private int testPieceColor = 0;
     private Move current_move = new Move();
     ////////////////////////////////////////////////////////
 
@@ -255,6 +254,7 @@ class Board {
         reset();
     }
 
+    /*DO NOT TOUCH THIS BELOW: HANDLES GUI + SMOOTH PIECE MOVEMENT*/
     private EventHandler<MouseEvent> mouseHandler = new EventHandler<>() {
         @Override
         public void handle(MouseEvent mouseEvent) {
@@ -264,6 +264,7 @@ class Board {
             String type = mouseEvent.getEventType().toString();
             //Possible types: MOUSE_RELEASED, MOUSE_DRAGGED, MOUSE_CLICKED
             if (type.equals("MOUSE_DRAGGED")) {
+                //Handle updating board as dragging piece around. DO NOT TOUCH.
                 if (mouseDragging) {
                     upper_gc.clearRect(0, 0, board_size, board_size);//Toggle to have lit dragging effect.
                     put_piece_xy(upper_gc, x + drag_dx, y + drag_dy, drag_piece);
@@ -289,7 +290,8 @@ class Board {
                     pieceDestX = pb_x(x);
                     pieceDestY = pb_y(y);
                     // same square or wrong turn (trying to move a white piece when black's turn).
-                    if (((pieceDestX == pieceSourceX) && (pieceDestY == pieceSourceY)) || (turn_of(orig_piece) != turnToMove)) {
+                    if (((pieceDestX == pieceSourceX) && (pieceDestY == pieceSourceY))
+                            || (turn_of(orig_piece) != turnToMove)) {
                         drawBoard();
                         return;
                     }
@@ -321,58 +323,61 @@ class Board {
         }
     };
 
-    private void init_move_generator() {
-        curr_i = -1;
-        curr_j = 0;
-        next_square();
+    /**Helper function used in generating legal moves from this position: resets the
+     * legal move "trackers" testFile and testRank, which simply represent a file and rank
+     * respectively. **/
+    private void resetMoveTrackers() {
+        testFile = -1;
+        testRank = 0;
+        nextSquare();
     }
 
-    private void next_square() {
+    private void nextSquare() {
         boolean stop;
         do {
-            curr_i++;
-            if(curr_i > 7) {
-                curr_i = 0;
-                curr_j++;
+            testFile++;
+            if(testFile > 7) {
+                testFile = 0;
+                testRank++;
             }
-            if(curr_j > 7) {
+            if(testRank > 7) {
                 stop = true;
             }
             else {
-                char gen_piece = board[curr_i][curr_j];
+                char gen_piece = board[testFile][testRank];
                 stop = ((gen_piece != ' ') && (turn_of(gen_piece) == turnToMove));
             }
         }
         while(!stop);
 
-        if(curr_j < 8) {
-            current_move_gen_piece = board[curr_i][curr_j];
-            current_move_gen_piece_code = code_of(current_move_gen_piece);
-            current_move_gen_piece_type = current_move_gen_piece_code & PIECE_TYPE;
-            current_move_gen_piece_color = color_of(current_move_gen_piece);
-            is_current_move_gen_piece_sliding = ((current_move_gen_piece_code&SLIDING) != 0);
-            move_gen_curr_ptr = move_table_ptr[curr_i][curr_j][current_move_gen_piece_code];
+        if(testRank < 8) {
+            testPiece = board[testFile][testRank];
+            testPieceCode = code_of(testPiece);
+            testPieceType = testPieceCode & PIECE_TYPE;
+            testPieceColor = color_of(testPiece);
+            testPieceSlides = ((testPieceCode & SLIDING) != 0);
+            genMoveInd = mtPtr[testFile][testRank][testPieceCode];
         }
     }
 
-    private boolean next_pseudo_legal_move() {
-        while(curr_j < 8) {
-            while(!move_table[move_gen_curr_ptr].end_piece) {
-                MoveDescriptor md = move_table[move_gen_curr_ptr];
+    private boolean nextLegalMove() {
+        while(testRank < 8) {
+            while(!moveTable[genMoveInd].end_piece) {
+                MoveDescriptor md = moveTable[genMoveInd];
                 int to_i = md.to_i;
                 int to_j = md.to_j;
                 char to_piece = board[to_i][to_j];
                 int to_piece_color = color_of(to_piece);
                 current_move = new Move();
 
-                current_move.i1 = curr_i;
-                current_move.j1 = curr_j;
+                current_move.i1 = testFile;
+                current_move.j1 = testRank;
                 current_move.i2 = to_i;
                 current_move.j2 = to_j;
                 current_move.prom_piece = md.prom_piece;
                 if(md.castling) {
-                    move_gen_curr_ptr++;
-                    if((curr_j == 0) && (to_i == 6)) {
+                    genMoveInd++;
+                    if((testRank == 0) && (to_i == 6)) {
                         // black kingside
                         if((board[6][0] == ' ') && (board[5][0] == ' ')
                                 &&
@@ -386,7 +391,7 @@ class Board {
                         }
                     }
 
-                    if((curr_j==0)&&(to_i==2)) {
+                    if((testRank ==0)&&(to_i==2)) {
                         // black queenside
                         if(
                                 (board[3][0]==' ')
@@ -405,7 +410,7 @@ class Board {
                         }
                     }
 
-                    if((curr_j==7)&&(to_i==6)) {
+                    if((testRank ==7)&&(to_i==6)) {
                         // white kingside
                         if(
                                 (board[6][7]==' ')
@@ -423,7 +428,7 @@ class Board {
                         }
                     }
 
-                    if((curr_j==7)&&(to_i==2))
+                    if((testRank ==7)&&(to_i==2))
                     {
                         // white queenside
                         if(
@@ -445,28 +450,28 @@ class Board {
                     }
 
                 }
-                else if((to_piece != ' ') && (to_piece_color == current_move_gen_piece_color)) {
+                else if((to_piece != ' ') && (to_piece_color == testPieceColor)) {
                     // own piece
-                    if(is_current_move_gen_piece_sliding)
-                        move_gen_curr_ptr=md.next_vector;
+                    if(testPieceSlides)
+                        genMoveInd =md.next_vector;
                     else
-                        move_gen_curr_ptr++;
+                        genMoveInd++;
                 }
                 else {
                     boolean is_capture = to_piece != ' ';
                     if(is_capture) {
                         // capture
-                        if(is_current_move_gen_piece_sliding)
-                            move_gen_curr_ptr = md.next_vector;
+                        if(testPieceSlides)
+                            genMoveInd = md.next_vector;
                         else
-                            move_gen_curr_ptr++;
+                            genMoveInd++;
                     }
                     else
                     {
-                        move_gen_curr_ptr++;
+                        genMoveInd++;
                     }
-                    if(current_move_gen_piece_type == PAWN) {
-                        if(curr_i != to_i) {
+                    if(testPieceType == PAWN) {
+                        if(testFile != to_i) {
                             // sidewise move may be ep capture
                             String test_algeb = Move.ij_to_algeb(to_i, to_j);
                             if(test_algeb.equals(ep_square_algeb))
@@ -475,13 +480,13 @@ class Board {
 
                         if(is_capture) {
                             // pawn captures only to the sides
-                            if(curr_i != to_i)
+                            if(testFile != to_i)
                                 return true;
                         }
                         else {
                             // pawn moves only straight ahead
-                            if(curr_i==to_i) {
-                                if(Math.abs(to_j - curr_j) < 2 || board[curr_i][curr_j + (to_j - curr_j)/2] == ' ')
+                            if(testFile ==to_i) {
+                                if(Math.abs(to_j - testRank) < 2 || board[testFile][testRank + (to_j - testRank)/2] == ' ')
                                     // can always move one square forward
                                     return true;
                             }
@@ -491,7 +496,7 @@ class Board {
                         return true;
                 }
             }
-            next_square();
+            nextSquare();
         }
         return false;
     }
@@ -539,38 +544,38 @@ class Board {
     /** Populate dark square hashtable, mapping pieces on dark squares to suitable font.**/
     private static void mapBlack() {
         darkSquareMap = new Hashtable();
-        darkSquareMap.put(' ','+');
-        darkSquareMap.put('P','P');
-        darkSquareMap.put('N','N');
-        darkSquareMap.put('B','B');
-        darkSquareMap.put('R','R');
-        darkSquareMap.put('Q','Q');
-        darkSquareMap.put('K','K');
+        darkSquareMap.put(' ', '+');
+        darkSquareMap.put('P', 'P');
+        darkSquareMap.put('N', 'N');
+        darkSquareMap.put('B', 'B');
+        darkSquareMap.put('R', 'R');
+        darkSquareMap.put('Q', 'Q');
+        darkSquareMap.put('K', 'K');
         //Ran out of letters so put some random shit here.
-        darkSquareMap.put('p','O');
-        darkSquareMap.put('n','M');
-        darkSquareMap.put('b','V');
-        darkSquareMap.put('r','T');
-        darkSquareMap.put('q','W');
-        darkSquareMap.put('k','L');
+        darkSquareMap.put('p', 'O');
+        darkSquareMap.put('n', 'M');
+        darkSquareMap.put('b', 'V');
+        darkSquareMap.put('r', 'T');
+        darkSquareMap.put('q', 'W');
+        darkSquareMap.put('k', 'L');
     }
 
     /** Populate light square hashtable, mapping pieces on light squares to suitable font. **/
     private static void mapWhite() {
         lightSquareMap = new Hashtable();
-        lightSquareMap.put(' ',' ');
-        lightSquareMap.put('P','p');
-        lightSquareMap.put('N','n');
-        lightSquareMap.put('B','b');
-        lightSquareMap.put('R','r');
-        lightSquareMap.put('Q','q');
-        lightSquareMap.put('K','k');
-        lightSquareMap.put('p','o');
-        lightSquareMap.put('n','m');
-        lightSquareMap.put('b','v');
-        lightSquareMap.put('r','t');
-        lightSquareMap.put('q','w');
-        lightSquareMap.put('k','l');
+        lightSquareMap.put(' ', ' ');
+        lightSquareMap.put('P', 'p');
+        lightSquareMap.put('N', 'n');
+        lightSquareMap.put('B', 'b');
+        lightSquareMap.put('R', 'r');
+        lightSquareMap.put('Q', 'q');
+        lightSquareMap.put('K', 'k');
+        lightSquareMap.put('p', 'o');
+        lightSquareMap.put('n', 'm');
+        lightSquareMap.put('b', 'v');
+        lightSquareMap.put('r', 't');
+        lightSquareMap.put('q', 'w');
+        lightSquareMap.put('k', 'l');
     }
 
     /** Return true if cartesian coordinate (x,y) is a valid coordinate
@@ -746,6 +751,7 @@ class Board {
         }
 
         gc.setFont(Font.font("Courier New", font_size));
+        //Update FEN
         String gc_text = " t: "+(turnToMove ==1? "w" : "b")+
                 ", c: "+castling_rights+
                 ", ep: "+ep_square_algeb+
@@ -756,7 +762,7 @@ class Board {
         gc.fillText(gc_text, 0,board_size + padding + font_size);
         gc.strokeRect(0, 0, board_size, board_size);
         fen_text.setText(getFEN());
-        list_legal_moves();
+        listLegalMoves();
     }
 
     /** Convert current board position to string representation. **/
@@ -1086,11 +1092,11 @@ class Board {
         for(int p = 0; p < all_pieces.length; p++) {
             int piece_code = all_pieces[p];
             int piece_type = piece_code & PIECE_TYPE;
-            int check_ptr=move_table_ptr[i][j][piece_code|color];
+            int check_ptr= mtPtr[i][j][piece_code|color];
             char test_piece = decodePiece(piece_code|attacker_color);
             MoveDescriptor md;
             do {
-                md = move_table[check_ptr];
+                md = moveTable[check_ptr];
                 if (md.castling) {
                     check_ptr++;
                 }
@@ -1158,24 +1164,25 @@ class Board {
         coords[1] = king_j;
         return coords;
     }
+    //Possibly an ArrayList is more space-efficient
+    public String[] currPosLegalMoves = new String[250];
+    public int numLegalMoves = 0;
 
-    public String[] legal_move_list_buffer = new String[250];
-    public int legal_move_list_buffer_cnt = 0;
-    public void list_legal_moves() {
-        init_move_generator();
-        String legal_move_list_as_string;
-        legal_move_list_buffer_cnt = 0;
-        while(next_pseudo_legal_move()) {
+    /**Populate legal moves array for current position, and display on GUI**/
+    public void listLegalMoves() {
+        resetMoveTrackers();
+        numLegalMoves = 0;
+        while(nextLegalMove()) {
             String algeb = current_move.toAlgebraic();
             Board dummy=new Board(false);
             dummy.setFromFEN(getFEN());
             dummy.make_move(current_move);
             if(!dummy.is_in_check(turnToMove)) {
-                String san = to_san(current_move);
-                legal_move_list_buffer[legal_move_list_buffer_cnt++] = san;
+                String san = moveSAN(current_move);
+                currPosLegalMoves[numLegalMoves++] = san;
             }
         }
-        String[] legal_move_list_buffer_slice = Arrays.copyOfRange(legal_move_list_buffer, 0, legal_move_list_buffer_cnt);
+        String[] legal_move_list_buffer_slice = Arrays.copyOfRange(currPosLegalMoves, 0, numLegalMoves);
         Arrays.sort(legal_move_list_buffer_slice);
         ObservableList<String> items = FXCollections.observableArrayList(legal_move_list_buffer_slice);
         list.setItems(items);
@@ -1191,8 +1198,8 @@ class Board {
     private boolean is_move_legal(Move m) {
         boolean is_legal = false;
         String algeb = m.algebraicHelper(false);
-        init_move_generator();
-        while((!is_legal)&&(next_pseudo_legal_move())) {
+        resetMoveTrackers();
+        while((!is_legal)&& (nextLegalMove())) {
             String test_algeb = current_move.algebraicHelper(false);
             if(test_algeb.equals(algeb)) {
                 Board dummy = new Board(false);
@@ -1206,7 +1213,7 @@ class Board {
         return is_legal;
     }
 
-    private String to_san_raw(Move m) {
+    private String moveSANRaw(Move m) {
         char from_piece = board[m.i1][m.j1];
         int from_piece_code = code_of(from_piece);
         int from_piece_type = from_piece_code & PIECE_TYPE;
@@ -1231,7 +1238,7 @@ class Board {
             }
         }
         else {
-            int test_ptr = move_table_ptr[m.i2][m.j2][from_piece_code];
+            int test_ptr = mtPtr[m.i2][m.j2][from_piece_code];
             MoveDescriptor md;
             boolean ambiguity=false;
             boolean same_rank=false;
@@ -1241,7 +1248,7 @@ class Board {
             int from_file_list[] = new int[50];
             int from_file_cnt = 0;
             do {
-                md = move_table[test_ptr];
+                md = moveTable[test_ptr];
                 char to_piece_test = board[md.to_i][md.to_j];
                 if(to_piece_test == ' ') {
                     test_ptr++;
@@ -1282,7 +1289,7 @@ class Board {
                     }
                 }
 
-            }while(!move_table[test_ptr].end_piece);
+            }while(!moveTable[test_ptr].end_piece);
 
             String san = "" + Character.toUpperCase(from_piece);
 
@@ -1303,43 +1310,44 @@ class Board {
         }
     }
 
-    public String to_san(Move m) {
-        String raw = to_san_raw(m);
+    /** Convert Move M to standard algebraic notation (SAN). **/
+    public String moveSAN(Move m) {
+        String san = moveSANRaw(m);
         if(m.prom_piece != ' ')
-            raw += "=" + Character.toUpperCase(m.prom_piece);
+            san += "=" + Character.toUpperCase(m.prom_piece);
 
-        Board dummy = new Board(false);
-        dummy.setFromFEN(getFEN());
-        dummy.make_move(m);
-        boolean is_check = dummy.is_in_check(dummy.turnToMove);
-        dummy.init_move_generator();
+        Board test = new Board(false);
+        test.setFromFEN(getFEN());
+        test.make_move(m);
+        boolean is_check = test.is_in_check(test.turnToMove);
+        test.resetMoveTrackers();
         boolean has_legal = false;
-        while((dummy.next_pseudo_legal_move())&&(!has_legal)) {
-            Board dummy2 = new Board(false);
-            dummy2.setFromFEN(dummy.getFEN());
-            dummy2.make_move(dummy.current_move);
-            if(!dummy2.is_in_check(dummy.turnToMove)) {
+        while((test.nextLegalMove()) && (!has_legal)) {
+            Board test2 = new Board(false);
+            test2.setFromFEN(test.getFEN());
+            test2.make_move(test.current_move);
+            if(!test2.is_in_check(test.turnToMove)) {
                 has_legal = true;
             }
         }
 
         if(is_check) {
             if(has_legal) {
-                raw += "+";
+                san += "+";
             }
             else {
-                raw += "#";
+                san += "#";
             }
         }
         else if(!has_legal) {
-            raw += "=";
+            san += "=";
         }
-        return raw;
+        return san;
     }
 
     public void make_move_show(Move m) {
         if(m != null) {
-            String san = to_san(m);
+            String san = moveSAN(m);
             make_move(m);
             g.add_move(san, getFEN());
         }
@@ -1504,7 +1512,7 @@ class Board {
                 int piece_type = piece_code & PIECE_TYPE;
                 boolean is_sliding = ((piece_type & SLIDING)!=0);
 
-                int san_ptr = move_table_ptr[m.i2][m.j2][piece_code];
+                int san_ptr = mtPtr[m.i2][m.j2][piece_code];
                 MoveDescriptor md;
                 boolean found = false;
                 char search_piece = piece;
@@ -1512,7 +1520,7 @@ class Board {
                     search_piece = Character.toLowerCase(piece);
 
                 do {
-                    md = move_table[san_ptr];
+                    md = moveTable[san_ptr];
                     char to_piece = board[md.to_i][md.to_j];
                     if(to_piece == ' ') {
                         san_ptr++;
@@ -1599,7 +1607,7 @@ class Board {
                     int piece_color = p & PIECE_COLOR;
                     if(isPiece(piece_type)) {
                         boolean is_single = ((piece_type & SINGLE) != 0);
-                        move_table_ptr[x][y][p] = move_table_curr_ptr;
+                        mtPtr[x][y][p] = move_table_curr_ptr;
                         //NOTE: top left corner is (0,0), so Black's back rank is 0 and White's is 7.
                         //Left column is 0, right column is 7.
                         for(int dx = -2; dx <= 2; dx++) {
@@ -1627,7 +1635,7 @@ class Board {
                                                     md.castling = false;
                                                     md.promotion = true;
                                                     md.prom_piece = promotion_pieces[prom];
-                                                    move_table[move_table_curr_ptr++] = md;
+                                                    moveTable[move_table_curr_ptr++] = md;
                                                 }
                                             }
                                             else {
@@ -1635,20 +1643,20 @@ class Board {
                                                 md.to_i = possible_dest_x;
                                                 md.to_j = possible_dest_y;
                                                 md.castling = is_castling;
-                                                move_table[move_table_curr_ptr++] = md;
+                                                moveTable[move_table_curr_ptr++] = md;
                                             }
                                         }
                                     }while(square_ok && (!is_single));
 
                                     for (int ptr = start_vector; ptr < move_table_curr_ptr; ptr++) {
-                                        move_table[ptr].next_vector = move_table_curr_ptr;
+                                        moveTable[ptr].next_vector = move_table_curr_ptr;
                                     }
                                 }
                             }
                         }
                         //Update move table.
-                        move_table[move_table_curr_ptr] = new MoveDescriptor();
-                        move_table[move_table_curr_ptr++].end_piece = true;
+                        moveTable[move_table_curr_ptr] = new MoveDescriptor();
+                        moveTable[move_table_curr_ptr++].end_piece = true;
                     }
                 }
             }

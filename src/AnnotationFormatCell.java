@@ -31,7 +31,8 @@ public class AnnotationFormatCell extends ListCell<String> {
         // calling super here is very important - don't skip this!
         super.updateItem(item, empty);
         setText(item);
-        if(item==null) return;
+        if(item == null)
+            return;
         Color c = get_color(item);
 
         if(!c.equals(Color.GRAY))

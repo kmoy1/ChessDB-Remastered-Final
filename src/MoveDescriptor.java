@@ -15,5 +15,7 @@ public class MoveDescriptor {
         castling = false;
         promotion = false;
         prom_piece = ' ';
+        to_i = 0;
+        to_j = 0;
     }
 }
